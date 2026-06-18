@@ -93,7 +93,7 @@
     margin-bottom: 6px;
   }
 
-  .field input, .field select {
+  .field input, .field select, .field textarea {
     width: 100%;
     background: var(--panel-raised);
     border: 1px solid var(--border);
@@ -102,9 +102,10 @@
     color: var(--text);
     font-size: 15px;
     font-family: inherit;
+    resize: vertical;
   }
 
-  .field input:focus, .field select:focus {
+  .field input:focus, .field select:focus, .field textarea:focus {
     outline: none;
     border-color: var(--accent);
   }
@@ -337,6 +338,75 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  .channel-toggle {
+    display: block;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .channel-toggle:has(input[type="checkbox"]:checked) {
+    border-color: var(--accent);
+  }
+
+  .channel-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .channel-check input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .channel-label {
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  .channel-input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 11px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    margin-top: 10px;
+    display: block;
+  }
+
+  .channel-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btn-send-final {
+    width: 100%;
+    background: var(--accent);
+    color: #1a1106;
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-send-final:hover { filter: brightness(1.08); }
+
   .reset-link {
     display: block;
     text-align: center;
@@ -345,6 +415,70 @@
     margin-top: 18px;
     cursor: pointer;
     text-decoration: underline;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .search-row input {
+    flex: 1;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+  }
+
+  .search-row input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .search-row button {
+    background: var(--accent);
+    color: #1a1106;
+    border: none;
+    border-radius: 8px;
+    padding: 0 18px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .search-row button:hover { filter: brightness(1.08); }
+
+  .search-result-item {
+    margin-top: 10px;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .search-result-item:hover { border-color: var(--accent); }
+
+  .search-result-item .res-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+
+  .search-result-item .res-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .search-empty {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-dim);
   }
 </style>
 </head>
@@ -360,6 +494,24 @@
   <div class="summary-bar">
     <span>Etapas concluídas: <b id="doneCount">0</b>/4</span>
     <span id="clockNow"></span>
+  </div>
+
+  <!-- MENSAGEM (primeiro campo) -->
+  <div class="card">
+    <p class="card-title">Mensagem / Observações da operação</p>
+    <div class="field">
+      <textarea id="operMsg" rows="3" placeholder="Ex: Boa tarde, segue as datas e horários da operação..."></textarea>
+    </div>
+  </div>
+
+  <!-- BUSCA DE HISTÓRICO -->
+  <div class="card" id="historyCard">
+    <p class="card-title">Buscar operação anterior</p>
+    <div class="search-row">
+      <input type="text" id="searchQuery" placeholder="Nº do contêiner ou referência..." autocomplete="off">
+      <button type="button" id="searchBtn">Buscar</button>
+    </div>
+    <div id="searchResults"></div>
   </div>
 
   <!-- DADOS GERAIS -->
@@ -396,17 +548,28 @@
 
   <!-- DESTINO -->
   <div class="card dest-card" id="destCard">
-    <p class="card-title">Enviar atualização para</p>
-    <div class="field">
-      <label for="destEmail">E-mail de destino</label>
-      <input type="email" id="destEmail" placeholder="cliente@empresa.com">
-    </div>
-    <div class="field">
-      <label for="destWhats">WhatsApp de destino (com DDD)</label>
-      <input type="tel" id="destWhats" placeholder="Ex: 11987654321">
-    </div>
-    <div class="hint">Esses dados ficam salvos neste aparelho para os próximos envios.</div>
+    <p class="card-title">Enviar via</p>
+
+    <label class="channel-toggle" id="toggleEmail">
+      <div class="channel-check">
+        <input type="checkbox" id="useEmail" checked>
+        <span class="channel-label">📧 E-mail</span>
+      </div>
+      <input type="email" id="destEmail" placeholder="cliente@empresa.com" class="channel-input">
+    </label>
+
+    <label class="channel-toggle" id="toggleWhats">
+      <div class="channel-check">
+        <input type="checkbox" id="useWhats" checked>
+        <span class="channel-label">💬 WhatsApp</span>
+      </div>
+      <div class="hint" style="margin-top:4px;margin-bottom:0">Abre o WhatsApp Web — você escolhe a conversa para enviar.</div>
+    </label>
+
+    <div class="hint" style="margin-top:10px">O e-mail fica salvo neste aparelho para os próximos envios.</div>
   </div>
+
+  <button type="button" class="btn-send-final" id="btnSendFinal">Enviar</button>
 
   <div class="reset-link" id="resetLink">Limpar todos os dados e começar de novo</div>
 
@@ -426,6 +589,66 @@
   ];
 
   const STORAGE_KEY = 'containerTrackerState_v1';
+  const HISTORY_KEY = 'containerTrackerHistory_v1';
+
+  function loadHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return [];
+  }
+
+  function saveToHistory() {
+    if (!state.containerNum && !state.refNum) return;
+    const history = loadHistory();
+    const entry = {
+      id: Date.now(),
+      savedAt: new Date().toISOString(),
+      driverName: state.driverName,
+      plateCavalo: state.plateCavalo,
+      plateReboque: state.plateReboque,
+      containerNum: state.containerNum,
+      refNum: state.refNum,
+      operMsg: state.operMsg,
+    };
+    // Remove entrada anterior com mesmo contêiner ou referência
+    const filtered = history.filter(h =>
+      !(h.containerNum && h.containerNum === entry.containerNum) &&
+      !(h.refNum && h.refNum === entry.refNum)
+    );
+    filtered.unshift(entry);
+    // Guarda no máximo 50 entradas
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, 50)));
+  }
+
+  function searchHistory(query) {
+    if (!query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    return loadHistory().filter(h =>
+      (h.containerNum && h.containerNum.toLowerCase().includes(q)) ||
+      (h.refNum && h.refNum.toLowerCase().includes(q))
+    );
+  }
+
+  function applyHistoryEntry(entry) {
+    state.driverName = entry.driverName || '';
+    state.plateCavalo = entry.plateCavalo || '';
+    state.plateReboque = entry.plateReboque || '';
+    state.containerNum = entry.containerNum || '';
+    state.refNum = entry.refNum || '';
+    state.operMsg = entry.operMsg || '';
+    // Limpa as etapas para nova operação
+    STAGES.forEach(s => {
+      state.stages[s.key] = { date: '', time: '', pending: false, sent: false, extra: {} };
+    });
+    state.openStage = null;
+    saveState();
+    render();
+    document.getElementById('searchResults').innerHTML = '';
+    document.getElementById('searchQuery').value = '';
+    showToast('Dados carregados — etapas foram limpas para nova operação');
+  }
 
   function loadState() {
     try {
@@ -434,7 +657,8 @@
     } catch (e) {}
     return {
       driverName: '', plateCavalo: '', plateReboque: '', containerNum: '', refNum: '',
-      destEmail: '', destWhats: '',
+      operMsg: '',
+      destEmail: '',
       stages: {}, openStage: null
     };
   }
@@ -493,8 +717,8 @@
     document.getElementById('plateReboque').value = state.plateReboque;
     document.getElementById('containerNum').value = state.containerNum;
     document.getElementById('refNum').value = state.refNum;
-    document.getElementById('destEmail').value = state.destEmail;
-    document.getElementById('destWhats').value = state.destWhats;
+    document.getElementById('operMsg').value = state.operMsg || '';
+    document.getElementById('destEmail').value = state.destEmail || '';
 
     const container = document.getElementById('stagesContainer');
     container.innerHTML = '';
@@ -515,7 +739,7 @@
       if (st.pending) {
         timeDisplay = 'A confirmar';
       } else if (isFilled) {
-        timeDisplay = formatDateBR(st.date) + ' ' + st.time + (st.sent ? ' · enviado' : ' · não enviado');
+        timeDisplay = formatDateBR(st.date) + ' às ' + st.time;
       } else if (st.date || st.time) {
         timeDisplay = 'Incompleto (falta data ou horário)';
       } else {
@@ -563,10 +787,6 @@
           <button type="button" class="btn-now" data-stage="${stageDef.key}" ${st.pending ? 'disabled' : ''}>Agora</button>
         </div>
         ${extraHtml}
-        <button type="button" class="btn-send" data-stage="${stageDef.key}" ${!isFilled ? 'disabled' : ''}>
-          Enviar atualização desta etapa
-        </button>
-        <div class="hint">O envio inclui esta etapa e todas as anteriores já preenchidas. Etapas marcadas como "A confirmar" não liberam envio.</div>
       `;
 
       stageEl.appendChild(head);
@@ -640,13 +860,6 @@
         saveState();
       };
     });
-
-    document.querySelectorAll('.btn-send').forEach(btn => {
-      btn.onclick = (e) => {
-        const stageKey = e.target.dataset.stage;
-        sendUpdate(stageKey);
-      };
-    });
   }
 
   document.getElementById('driverName').oninput = (e) => { state.driverName = e.target.value; saveState(); };
@@ -654,8 +867,38 @@
   document.getElementById('plateReboque').oninput = (e) => { state.plateReboque = e.target.value; saveState(); };
   document.getElementById('containerNum').oninput = (e) => { state.containerNum = e.target.value; saveState(); };
   document.getElementById('refNum').oninput = (e) => { state.refNum = e.target.value; saveState(); };
+  document.getElementById('operMsg').oninput = (e) => { state.operMsg = e.target.value; saveState(); };
+
+  document.getElementById('searchBtn').onclick = () => {
+    const q = document.getElementById('searchQuery').value;
+    const results = searchHistory(q);
+    const container = document.getElementById('searchResults');
+    if (!q.trim()) {
+      container.innerHTML = '<div class="search-empty">Digite o número do contêiner ou referência para buscar.</div>';
+      return;
+    }
+    if (results.length === 0) {
+      container.innerHTML = '<div class="search-empty">Nenhuma operação encontrada.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    results.forEach(entry => {
+      const div = document.createElement('div');
+      div.className = 'search-result-item';
+      const date = entry.savedAt ? new Date(entry.savedAt).toLocaleDateString('pt-BR') : '';
+      div.innerHTML = `
+        <div class="res-title">📦 ${entry.containerNum || '—'} &nbsp;·&nbsp; Ref: ${entry.refNum || '—'}</div>
+        <div class="res-sub">${entry.driverName || '—'} &nbsp;·&nbsp; ${entry.plateCavalo || '—'} / ${entry.plateReboque || '—'} &nbsp;·&nbsp; ${date}</div>
+      `;
+      div.onclick = () => applyHistoryEntry(entry);
+      container.appendChild(div);
+    });
+  };
+
+  document.getElementById('searchQuery').onkeydown = (e) => {
+    if (e.key === 'Enter') document.getElementById('searchBtn').click();
+  };
   document.getElementById('destEmail').oninput = (e) => { state.destEmail = e.target.value; saveState(); };
-  document.getElementById('destWhats').oninput = (e) => { state.destWhats = e.target.value; saveState(); };
 
   document.getElementById('resetLink').onclick = () => {
     if (confirm('Tem certeza? Isso vai apagar todos os dados preenchidos (horários, contêiner, referência).')) {
@@ -669,10 +912,14 @@
     }
   };
 
-  function buildMessageText(uptoStageKey) {
+  function buildMessageText() {
     const lines = [];
     lines.push('ATUALIZAÇÃO DE OPERAÇÃO');
     lines.push('');
+    if (state.operMsg && state.operMsg.trim()) {
+      lines.push(state.operMsg.trim());
+      lines.push('');
+    }
     lines.push('Motorista/Funcionário: ' + (state.driverName || '-'));
     lines.push('Placa cavalo: ' + (state.plateCavalo || '-'));
     lines.push('Placa reboque: ' + (state.plateReboque || '-'));
@@ -680,7 +927,6 @@
     lines.push('Referência: ' + (state.refNum || '-'));
     lines.push('');
 
-    let reached = false;
     STAGES.forEach(stageDef => {
       const st = state.stages[stageDef.key];
       if (st.pending) {
@@ -689,51 +935,52 @@
         lines.push(stageDef.label + ': ' + formatDateBR(st.date) + ' ' + st.time);
         if (stageDef.extra) {
           stageDef.extra.forEach(ex => {
-            if (st.extra[ex.key]) {
-              lines.push('  ' + ex.label + ': ' + st.extra[ex.key]);
-            }
+            if (st.extra[ex.key]) lines.push('  ' + ex.label + ': ' + st.extra[ex.key]);
           });
         }
-      } else {
-        return;
       }
-      if (stageDef.key === uptoStageKey) reached = true;
     });
 
     return lines.join('\n');
   }
 
-  function sendUpdate(stageKey) {
+  function sendUpdate() {
+    const useEmail = document.getElementById('useEmail').checked;
+    const useWhats = document.getElementById('useWhats').checked;
     const email = state.destEmail.trim();
-    const whats = state.destWhats.trim().replace(/\D/g, '');
 
-    if (!email && !whats) {
-      showToast('Preencha e-mail ou WhatsApp de destino');
+    if (!useEmail && !useWhats) {
+      showToast('Selecione ao menos um canal de envio');
+      return;
+    }
+
+    if (useEmail && !email) {
+      showToast('Preencha o e-mail de destino');
       document.getElementById('destEmail').focus();
       return;
     }
 
-    const stageLabel = STAGES.find(s => s.key === stageKey).label;
-    const subject = `Atualização contêiner ${state.containerNum || ''} — ${stageLabel}`;
-    const bodyText = buildMessageText(stageKey);
+    const subject = `Atualização contêiner ${state.containerNum || ''} — Ref: ${state.refNum || ''}`;
+    const bodyText = buildMessageText();
 
-    if (email) {
-      const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
-      window.location.href = mailtoUrl;
+    if (useEmail) {
+      const webmailUrl = `https://webmail-seguro.com.br/?_task=mail&_action=compose&_to=${encodeURIComponent(email)}&_subject=${encodeURIComponent(subject)}&_body=${encodeURIComponent(bodyText)}`;
+      window.open(webmailUrl, '_blank');
     }
 
-    if (whats) {
-      const waUrl = `https://wa.me/55${whats.replace(/^55/, '')}?text=${encodeURIComponent(bodyText)}`;
-      setTimeout(() => {
-        window.open(waUrl, '_blank');
-      }, email ? 400 : 0);
+    if (useWhats) {
+      const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(bodyText)}`;
+      setTimeout(() => window.open(waUrl, '_blank'), useEmail ? 400 : 0);
     }
 
-    state.stages[stageKey].sent = true;
+    STAGES.forEach(s => { state.stages[s.key].sent = true; });
+    saveToHistory();
     saveState();
     render();
-    showToast('Atualização preparada para envio');
+    showToast('Enviado com sucesso!');
   }
+
+  document.getElementById('btnSendFinal').onclick = sendUpdate;
 
   render();
 </script>
