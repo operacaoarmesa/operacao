@@ -611,6 +611,7 @@
       containerNum: state.containerNum,
       refNum: state.refNum,
       operMsg: state.operMsg,
+      stages: JSON.parse(JSON.stringify(state.stages)),
     };
     // Remove entrada anterior com mesmo contêiner ou referência
     const filtered = history.filter(h =>
@@ -638,16 +639,18 @@
     state.containerNum = entry.containerNum || '';
     state.refNum = entry.refNum || '';
     state.operMsg = entry.operMsg || '';
-    // Limpa as etapas para nova operação
+    // Restaura etapas salvas, ou limpa as que não existirem no registro
     STAGES.forEach(s => {
-      state.stages[s.key] = { date: '', time: '', pending: false, sent: false, extra: {} };
+      state.stages[s.key] = (entry.stages && entry.stages[s.key])
+        ? entry.stages[s.key]
+        : { date: '', time: '', pending: false, sent: false, extra: {} };
     });
     state.openStage = null;
     saveState();
     render();
     document.getElementById('searchResults').innerHTML = '';
     document.getElementById('searchQuery').value = '';
-    showToast('Dados carregados — etapas foram limpas para nova operação');
+    showToast('Operação carregada com todos os dados');
   }
 
   function loadState() {
@@ -912,10 +915,8 @@
     }
   };
 
-  function buildMessageText() {
+  function buildMessagePlain() {
     const lines = [];
-    lines.push('ATUALIZAÇÃO DE OPERAÇÃO');
-    lines.push('');
     if (state.operMsg && state.operMsg.trim()) {
       lines.push(state.operMsg.trim());
       lines.push('');
@@ -926,13 +927,12 @@
     lines.push('Contêiner: ' + (state.containerNum || '-'));
     lines.push('Referência: ' + (state.refNum || '-'));
     lines.push('');
-
     STAGES.forEach(stageDef => {
       const st = state.stages[stageDef.key];
       if (st.pending) {
         lines.push(stageDef.label + ': A confirmar');
       } else if (st.time && st.date) {
-        lines.push(stageDef.label + ': ' + formatDateBR(st.date) + ' ' + st.time);
+        lines.push(stageDef.label + ': ' + formatDateBR(st.date) + ' às ' + st.time);
         if (stageDef.extra) {
           stageDef.extra.forEach(ex => {
             if (st.extra[ex.key]) lines.push('  ' + ex.label + ': ' + st.extra[ex.key]);
@@ -940,8 +940,48 @@
         }
       }
     });
-
     return lines.join('\n');
+  }
+
+  function buildMessageHTML() {
+    const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const style = 'font-family:Arial,sans-serif;font-size:12pt;line-height:1.15;color:#000000;';
+
+    let rows = '';
+    rows += `<tr><td style="padding:2px 0"><b>Motorista/Funcionário:</b> ${esc(state.driverName || '-')}</td></tr>`;
+    rows += `<tr><td style="padding:2px 0"><b>Placa cavalo:</b> ${esc(state.plateCavalo || '-')}</td></tr>`;
+    rows += `<tr><td style="padding:2px 0"><b>Placa reboque:</b> ${esc(state.plateReboque || '-')}</td></tr>`;
+    rows += `<tr><td style="padding:2px 0"><b>Contêiner:</b> ${esc(state.containerNum || '-')}</td></tr>`;
+    rows += `<tr><td style="padding:2px 0"><b>Referência:</b> ${esc(state.refNum || '-')}</td></tr>`;
+
+    let stageRows = '';
+    STAGES.forEach(stageDef => {
+      const st = state.stages[stageDef.key];
+      if (st.pending) {
+        stageRows += `<tr><td style="padding:2px 0"><b>${esc(stageDef.label)}:</b> A confirmar</td></tr>`;
+      } else if (st.time && st.date) {
+        stageRows += `<tr><td style="padding:2px 0"><b>${esc(stageDef.label)}:</b> ${formatDateBR(st.date)} às ${st.time}</td></tr>`;
+        if (stageDef.extra) {
+          stageDef.extra.forEach(ex => {
+            if (st.extra[ex.key]) {
+              stageRows += `<tr><td style="padding:2px 0 2px 16px">${esc(ex.label)}: ${esc(st.extra[ex.key])}</td></tr>`;
+            }
+          });
+        }
+      }
+    });
+
+    const msgBlock = (state.operMsg && state.operMsg.trim())
+      ? `<p style="${style}margin:0 0 14px 0;">${esc(state.operMsg.trim()).replace(/\n/g,'<br>')}</p>`
+      : '';
+
+    return `<div style="${style}">
+      ${msgBlock}
+      <table style="border-collapse:collapse;${style}">
+        ${rows}
+      </table>
+      ${stageRows ? `<br><table style="border-collapse:collapse;${style}">${stageRows}</table>` : ''}
+    </div>`;
   }
 
   function sendUpdate() {
@@ -961,16 +1001,18 @@
     }
 
     const subject = `Atualização contêiner ${state.containerNum || ''} — Ref: ${state.refNum || ''}`;
-    const bodyText = buildMessageText();
 
     if (useEmail) {
-      const webmailUrl = `https://webmail-seguro.com.br/?_task=mail&_action=compose&_to=${encodeURIComponent(email)}&_subject=${encodeURIComponent(subject)}&_body=${encodeURIComponent(bodyText)}`;
+      const htmlBody = buildMessageHTML();
+      const webmailUrl = `https://webmail-seguro.com.br/?_task=mail&_action=compose&_to=${encodeURIComponent(email)}&_subject=${encodeURIComponent(subject)}&_body=${encodeURIComponent(htmlBody)}`;
       window.open(webmailUrl, '_blank');
     }
 
     if (useWhats) {
-      const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(bodyText)}`;
-      setTimeout(() => window.open(waUrl, '_blank'), useEmail ? 400 : 0);
+      const plainText = buildMessagePlain();
+      // whatsapp:// abre o app instalado no computador ou celular
+      const waUrl = `whatsapp://send?text=${encodeURIComponent(plainText)}`;
+      setTimeout(() => { window.location.href = waUrl; }, useEmail ? 400 : 0);
     }
 
     STAGES.forEach(s => { state.stages[s.key].sent = true; });
