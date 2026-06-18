@@ -865,11 +865,26 @@
     });
   }
 
+  function upperAlnum(val) {
+    return val.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  }
+
+  function applyUpperAlnum(el, stateKey) {
+    el.addEventListener('input', () => {
+      const cur = el.selectionStart;
+      const clean = upperAlnum(el.value);
+      el.value = clean;
+      el.setSelectionRange(cur, cur);
+      state[stateKey] = clean;
+      saveState();
+    });
+  }
+
   document.getElementById('driverName').oninput = (e) => { state.driverName = e.target.value; saveState(); };
-  document.getElementById('plateCavalo').oninput = (e) => { state.plateCavalo = e.target.value; saveState(); };
-  document.getElementById('plateReboque').oninput = (e) => { state.plateReboque = e.target.value; saveState(); };
-  document.getElementById('containerNum').oninput = (e) => { state.containerNum = e.target.value; saveState(); };
-  document.getElementById('refNum').oninput = (e) => { state.refNum = e.target.value; saveState(); };
+  applyUpperAlnum(document.getElementById('plateCavalo'), 'plateCavalo');
+  applyUpperAlnum(document.getElementById('plateReboque'), 'plateReboque');
+  applyUpperAlnum(document.getElementById('containerNum'), 'containerNum');
+  applyUpperAlnum(document.getElementById('refNum'), 'refNum');
   document.getElementById('operMsg').oninput = (e) => { state.operMsg = e.target.value; saveState(); };
 
   document.getElementById('searchBtn').onclick = () => {
