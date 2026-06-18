@@ -961,25 +961,27 @@
   function buildMessageHTML() {
     const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const style = 'font-family:Arial,sans-serif;font-size:12pt;line-height:1.15;color:#000000;';
+    const row = (label, value) =>
+      `<tr><td style="padding:3px 0"><b>${label}:</b> ${esc(value)}</td></tr>`;
 
     let rows = '';
-    rows += `<tr><td style="padding:2px 0"><b>Motorista/Funcionário:</b> ${esc(state.driverName || '-')}</td></tr>`;
-    rows += `<tr><td style="padding:2px 0"><b>Placa cavalo:</b> ${esc(state.plateCavalo || '-')}</td></tr>`;
-    rows += `<tr><td style="padding:2px 0"><b>Placa reboque:</b> ${esc(state.plateReboque || '-')}</td></tr>`;
-    rows += `<tr><td style="padding:2px 0"><b>Contêiner:</b> ${esc(state.containerNum || '-')}</td></tr>`;
-    rows += `<tr><td style="padding:2px 0"><b>Referência:</b> ${esc(state.refNum || '-')}</td></tr>`;
+    rows += row('Motorista/Funcionário', state.driverName || '-');
+    rows += row('Placa cavalo', state.plateCavalo || '-');
+    rows += row('Placa reboque', state.plateReboque || '-');
+    rows += row('Contêiner', state.containerNum || '-');
+    rows += row('Referência', state.refNum || '-');
 
     let stageRows = '';
     STAGES.forEach(stageDef => {
       const st = state.stages[stageDef.key];
       if (st.pending) {
-        stageRows += `<tr><td style="padding:2px 0"><b>${esc(stageDef.label)}:</b> A confirmar</td></tr>`;
+        stageRows += row(stageDef.label, 'A confirmar');
       } else if (st.time && st.date) {
-        stageRows += `<tr><td style="padding:2px 0"><b>${esc(stageDef.label)}:</b> ${formatDateBR(st.date)} às ${st.time}</td></tr>`;
+        stageRows += row(stageDef.label, formatDateBR(st.date) + ' às ' + st.time);
         if (stageDef.extra) {
           stageDef.extra.forEach(ex => {
             if (st.extra[ex.key]) {
-              stageRows += `<tr><td style="padding:2px 0 2px 16px">${esc(ex.label)}: ${esc(st.extra[ex.key])}</td></tr>`;
+              stageRows += row(ex.label, st.extra[ex.key]);
             }
           });
         }
