@@ -335,8 +335,16 @@ function maskVal(val){
 
 // ─── Segurança ────────────────────────────────────────────────────────────────
 async function hashPwd(pwd){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pwd+':frota_v1'));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  try{
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pwd+':frota_v1'));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    // Fallback simples caso crypto.subtle não esteja disponível
+    let h=0;
+    const s=pwd+':frota_v1';
+    for(let i=0;i<s.length;i++){ h=Math.imul(31,h)+s.charCodeAt(i)|0; }
+    return 'fb_'+(h>>>0).toString(16).padStart(8,'0')+'_'+btoa(s).replace(/[^a-z0-9]/gi,'').slice(0,24);
+  }
 }
 async function getStoredHash(){ try{ const r=await window.storage.get(SEC_KEY,true); return r?r.value:null; }catch(e){ return null; } }
 async function setStoredHash(h){ await window.storage.set(SEC_KEY,h,true); }
@@ -505,14 +513,24 @@ App.tryUnlock=async function(){
   const val=input.value;
   if(!val){ errEl.textContent='Digite a senha.'; return; }
   btn.disabled=true; btn.textContent='Verificando…';
-  const hash=await hashPwd(val);
-  const stored=await getStoredHash();
-  if(hash===stored){
-    isLocked=false; startLockTimer(); render();
-  } else {
-    errEl.textContent='Senha incorreta. Tente novamente.';
-    input.value=''; input.focus();
+  try{
+    const hash=await hashPwd(val);
+    const stored=await getStoredHash();
+    if(!stored){
+      // Nenhuma senha cadastrada — vai para setup
+      isSetup=true; isLocked=false; render(); return;
+    }
+    if(hash===stored){
+      isLocked=false; startLockTimer(); render();
+    } else {
+      errEl.textContent='Senha incorreta. Tente novamente.';
+      input.value=''; input.focus();
+      btn.disabled=false; btn.textContent='Entrar';
+    }
+  }catch(e){
+    errEl.textContent='Erro ao verificar senha. Tente novamente.';
     btn.disabled=false; btn.textContent='Entrar';
+    console.error('tryUnlock error:',e);
   }
 };
 
@@ -1738,6 +1756,14 @@ async function waitForStorage(maxWaitMs){
   return !!window.storage;
 }
 
+// Comando de emergência via console: resetarSenha()
+window.resetarSenha=async function(){
+  await clearStoredHash();
+  isSetup=true; isLocked=false;
+  alert('Senha removida. Você pode criar uma nova agora.');
+  renderSetupScreen();
+};
+
 async function boot(){
   const ready=await waitForStorage(4000);
   if(!ready){
@@ -1745,7 +1771,8 @@ async function boot(){
     motoristas=[]; veiculos=[]; render(); return;
   }
   // Check security before loading data
-  const hash=await getStoredHash();
+  let hash=null;
+  try{ hash=await getStoredHash(); }catch(e){ console.error('Erro ao buscar hash:',e); }
   if(!hash){ isSetup=true; isLocked=false; renderSetupScreen(); }
   else { isLocked=true; renderLockScreen(); }
   // Load data in background
