@@ -338,9 +338,9 @@ async function hashPwd(pwd){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pwd+':frota_v1'));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-async function getStoredHash(){ try{ const r=await window.storage.get(SEC_KEY,false); return r?r.value:null; }catch(e){ return null; } }
-async function setStoredHash(h){ await window.storage.set(SEC_KEY,h,false); }
-async function clearStoredHash(){ try{ await window.storage.delete(SEC_KEY,false); }catch(e){} }
+async function getStoredHash(){ try{ const r=await window.storage.get(SEC_KEY,true); return r?r.value:null; }catch(e){ return null; } }
+async function setStoredHash(h){ await window.storage.set(SEC_KEY,h,true); }
+async function clearStoredHash(){ try{ await window.storage.delete(SEC_KEY,true); }catch(e){} }
 
 function startLockTimer(){
   clearTimeout(lockTimerId);
@@ -531,8 +531,8 @@ App.trySetup=async function(){
 };
 
 App.showReset=function(){
-  if(!confirm('Redefinir a senha apagará o acesso atual.\nVocê precisará criar uma nova senha.\n\nConfirma?')) return;
-  clearStoredHash().then(()=>{ isSetup=true; isLocked=false; render(); });
+  // Disabled — password can only be changed by authenticated users via changePassword()
+  opShowToast('Use o botão 🔑 para alterar a senha após fazer login.');
 };
 
 App.changePassword=function(){
@@ -1086,15 +1086,15 @@ function renderSetupScreen(){
     <div class="sec-screen">
       <div class="sec-box">
         <div class="sec-icon">🔐</div>
-        <p class="sec-title">Criar senha de acesso</p>
-        <p class="sec-sub">Protege os dados da frota no seu dispositivo.<br>Cada membro da equipe define a própria senha.</p>
+        <p class="sec-title">Criar senha da equipe</p>
+        <p class="sec-sub">Esta senha será usada por toda a equipe.<br>Defina junto com os membros antes de compartilhar o acesso.</p>
         <input class="sec-input" type="password" id="pwd-new" placeholder="Nova senha (mín. 4 caracteres)"
           onkeydown="if(event.key==='Enter') document.getElementById('pwd-confirm').focus()">
         <input class="sec-input" type="password" id="pwd-confirm" placeholder="Confirmar senha"
           onkeydown="if(event.key==='Enter') App.trySetup()">
         <div id="pwd-error" class="sec-error"></div>
         <button id="pwd-btn" class="sec-btn" onclick="App.trySetup()">Criar senha</button>
-        <span class="sec-hint">Esta senha é salva apenas no seu navegador.</span>
+        <span class="sec-hint">Senha compartilhada com toda a equipe. Após criada, só pode ser alterada por quem já tem acesso.</span>
       </div>
     </div>`;
   setTimeout(()=>document.getElementById('pwd-new')?.focus(),100);
@@ -1111,7 +1111,6 @@ function renderLockScreen(){
           onkeydown="if(event.key==='Enter') App.tryUnlock()">
         <div id="pwd-error" class="sec-error"></div>
         <button id="pwd-btn" class="sec-btn" onclick="App.tryUnlock()">Entrar</button>
-        <a class="sec-link" onclick="App.showReset()">Esqueceu a senha? Redefinir</a>
       </div>
     </div>`;
   setTimeout(()=>document.getElementById('pwd-input')?.focus(),100);
