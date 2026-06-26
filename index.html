@@ -2,1047 +2,1732 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acompanhamento de Operação — Contêiner</title>
+<title>Armesa Logística e Transporte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #14171c;
-    --panel: #1c2128;
-    --panel-raised: #232932;
-    --border: #323a45;
-    --text: #e8eaed;
-    --text-dim: #9aa3af;
-    --accent: #ff8a3d;
-    --accent-dim: #5c3a22;
-    --done: #3ddc97;
-    --done-dim: #1c3d31;
-    --pending: #4a525e;
-    --danger: #ff5c5c;
-    --radius: 10px;
-    --mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
+  :root{
+    --bg:#EDEEE8;--panel:#1E2A33;--paper:#FFFFFF;--ink:#1B2420;--muted:#5C6B63;
+    --line:#D8D9D0;--accent:#D9731D;--accent-dark:#A8560F;--accent-tint:#FBE6D2;
+    --plate-blue:#1A3FA0;--ok:#3F7D4D;--ok-tint:#E2EFE2;--warn:#C9931B;
+    --warn-tint:#FBEFD2;--danger:#C1432E;--danger-tint:#F8E1DC;
+    --display:'Space Grotesk',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);}
+  .app{max-width:1100px;margin:0 auto;padding:0 0 4rem;}
+
+  .topbar{background:var(--panel);color:#fff;border-radius:0 0 16px 16px;padding:1.5rem 2rem 1.75rem;}
+  .brand{display:flex;align-items:baseline;gap:.6rem;}
+  .brand-mark{font-family:var(--display);font-weight:600;font-size:1.4rem;}
+  .brand-sub{font-family:var(--mono);font-size:.72rem;color:#9FB0BC;letter-spacing:.06em;text-transform:uppercase;}
+  .stats{display:flex;gap:1.5rem;margin-top:1.1rem;flex-wrap:wrap;}
+  .stat{font-family:var(--mono);font-size:.78rem;color:#C7D2D9;}
+  .stat b{font-family:var(--display);font-size:1.15rem;color:#fff;display:block;font-weight:600;}
+  .stat.alert b{color:#F2B27A;}
+
+  .tabs{display:flex;gap:.4rem;margin:1.4rem 2rem 0;border-bottom:1px solid var(--line);}
+  .tab{font-family:var(--display);font-weight:600;font-size:.92rem;padding:.6rem 1.1rem;background:none;border:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;}
+  .tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+  .tab.tab-alert{color:var(--warn);}
+  .tab.tab-alert.active{color:var(--danger);border-bottom-color:var(--danger);}
+
+  .controls{display:flex;gap:.75rem;margin:1.25rem 2rem 1rem;flex-wrap:wrap;align-items:center;}
+  .search-wrap{position:relative;flex:1;min-width:220px;}
+  .search-wrap input{width:100%;padding:.65rem .9rem .65rem 2.1rem;border-radius:10px;border:1px solid var(--line);font-family:var(--body);font-size:.92rem;background:var(--paper);}
+  .search-wrap input:focus{outline:2px solid var(--accent-tint);border-color:var(--accent);}
+  .search-icon{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.9rem;}
+  .btn{font-family:var(--body);font-weight:600;font-size:.88rem;border-radius:10px;border:1px solid var(--line);background:var(--paper);padding:.65rem 1.1rem;cursor:pointer;color:var(--ink);}
+  .btn:hover{border-color:var(--accent);}
+  .btn.primary{background:var(--accent);border-color:var(--accent-dark);color:#fff;}
+  .btn.primary:hover{background:var(--accent-dark);}
+  .btn.primary:disabled{opacity:.6;cursor:not-allowed;}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted);}
+  .btn.ghost:hover{color:var(--danger);}
+  .btn.icon-btn{padding:.65rem .8rem;font-size:1rem;}
+  .btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+  .sort-select{font-family:var(--mono);font-size:.74rem;padding:.35rem .6rem;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer;}
+
+  .filter-row{display:flex;gap:.4rem;padding:0 2rem 1rem;flex-wrap:wrap;align-items:center;}
+  .chip{font-family:var(--mono);font-size:.74rem;padding:.35rem .7rem;border-radius:20px;border:1px solid var(--line);background:var(--paper);cursor:pointer;color:var(--muted);}
+  .chip.active{background:var(--panel);color:#fff;border-color:var(--panel);}
+
+  .empty{margin:3rem 2rem;text-align:center;color:var(--muted);font-family:var(--body);}
+  .empty i{font-style:normal;font-family:var(--display);font-size:1.05rem;color:var(--ink);display:block;margin-bottom:.3rem;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1rem;padding:0 2rem;}
+  .load-more{text-align:center;padding:1.5rem 2rem;}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem;border-left:5px solid var(--ok);cursor:pointer;transition:box-shadow .15s;}
+  .card:hover{box-shadow:0 2px 12px rgba(0,0,0,.08);}
+  .card.status-warn{border-left-color:var(--warn);}
+  .card.status-danger{border-left-color:var(--danger);}
+  .card.neutral{border-left-color:var(--line);}
+  .card.driver-afastado{border-left-color:var(--warn);opacity:.85;}
+  .card.driver-desligado{border-left-color:#aaa;opacity:.7;}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;}
+  .item-name{font-family:var(--display);font-weight:600;font-size:1.02rem;margin:0;}
+  .item-sub{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin:.15rem 0 0;}
+  .pill{font-family:var(--mono);font-size:.68rem;padding:.2rem .55rem;border-radius:20px;white-space:nowrap;background:var(--ok-tint);color:#1F4D29;}
+  .status-warn .pill{background:var(--warn-tint);color:#704C09;}
+  .status-danger .pill{background:var(--danger-tint);color:#7A2A1C;}
+  .pill.type{background:#E7EBF6;color:#2A3C66;}
+  .pill.unassigned{background:var(--bg);color:var(--muted);}
+  .pill.s-ativo{background:var(--ok-tint);color:#1F4D29;}
+  .pill.s-afastado{background:var(--warn-tint);color:#704C09;}
+  .pill.s-desligado{background:#F0F0EE;color:#666;}
+
+  .plate{display:inline-block;font-family:var(--mono);font-weight:500;font-size:.82rem;border:1px solid #B9C2D6;border-radius:5px;overflow:hidden;line-height:1;margin:.7rem 0 .6rem;}
+  .plate-top{background:var(--plate-blue);color:#fff;font-size:.6rem;padding:.2rem .45rem;letter-spacing:.08em;}
+  .plate-body{padding:.32rem .55rem;background:#fff;letter-spacing:.04em;}
+
+  .card-meta{font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:.2rem;}
+  .card-meta span b{color:var(--ink);font-weight:500;}
+  .obs-tag{font-size:.7rem;background:#FFF8E1;color:#7A5C00;border-radius:4px;padding:.1rem .35rem;display:inline-block;margin-top:.2rem;}
+
+  /* Alert tab */
+  .alert-section{padding:1.2rem 2rem 0;}
+  .alert-section-title{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 .6rem;padding-bottom:.3rem;border-bottom:1px solid var(--line);}
+  .alert-section-title.red{color:var(--danger);}
+  .alert-section-title.orange{color:var(--warn);}
+  .alert-row{display:flex;align-items:center;gap:.8rem;padding:.55rem .8rem;background:var(--paper);border-radius:10px;margin-bottom:.4rem;cursor:pointer;border:1px solid var(--line);transition:box-shadow .12s;}
+  .alert-row:hover{box-shadow:0 1px 8px rgba(0,0,0,.07);}
+  .alert-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .alert-dot.red{background:var(--danger);}
+  .alert-dot.orange{background:var(--warn);}
+  .alert-dot.gray{background:#aaa;}
+  .alert-name{font-family:var(--display);font-weight:600;font-size:.9rem;flex:1;}
+  .alert-detail{font-family:var(--mono);font-size:.72rem;color:var(--muted);}
+  .alert-badge{font-family:var(--mono);font-size:.68rem;padding:.15rem .5rem;border-radius:20px;}
+  .alert-badge.red{background:var(--danger-tint);color:#7A2A1C;}
+  .alert-badge.orange{background:var(--warn-tint);color:#704C09;}
+
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(20,24,22,.45);display:flex;align-items:flex-start;justify-content:center;padding:3vh 1rem;overflow-y:auto;z-index:50;}
+  .modal{background:var(--paper);border-radius:16px;max-width:680px;width:100%;padding:1.75rem 2rem 2rem;margin-bottom:2rem;}
+  .modal h2{font-family:var(--display);font-weight:600;font-size:1.2rem;margin:0 0 .2rem;}
+  .modal .sub{font-family:var(--mono);font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 1.3rem;}
+  .modal-close{float:right;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);line-height:1;}
+  .section-label{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--accent-dark);margin:1.3rem 0 .6rem;border-bottom:1px solid var(--line);padding-bottom:.35rem;}
+  .section-label:first-of-type{margin-top:0;}
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem .9rem;}
+  .field label{display:block;font-size:.74rem;color:var(--muted);margin-bottom:.25rem;}
+  .field input,.field select,.field textarea{width:100%;padding:.5rem .65rem;border-radius:8px;border:1px solid var(--line);font-family:var(--body);font-size:.88rem;background:var(--paper);}
+  .field textarea{min-height:64px;resize:vertical;}
+  .field input[data-mono="1"]{font-family:var(--mono);}
+  .veiculo-row{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;background:var(--bg);border-radius:8px;cursor:pointer;transition:background .12s;}
+  .veiculo-row:hover{background:var(--line);}
+  .cnh-badge{margin-top:.3rem;min-height:1.4rem;}
+  .history-item{display:flex;justify-content:space-between;font-size:.78rem;padding:.3rem 0;border-bottom:1px solid var(--line);}
+  .history-item:last-child{border-bottom:none;}
+  .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:1.6rem;padding-top:1rem;border-top:1px solid var(--line);}
+
+  .csv-modal{position:fixed;inset:0;background:rgba(20,24,22,.55);display:flex;align-items:center;justify-content:center;padding:2vh 1rem;z-index:100;}
+  .csv-box{background:var(--paper);border-radius:16px;max-width:720px;width:100%;padding:1.5rem 1.75rem;display:flex;flex-direction:column;gap:.9rem;max-height:90vh;}
+  .csv-box h3{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0;}
+  .csv-box textarea{width:100%;flex:1;min-height:260px;font-family:var(--mono);font-size:.72rem;border:1px solid var(--line);border-radius:8px;padding:.6rem .75rem;resize:none;background:#FAFAF8;}
+  .csv-actions{display:flex;gap:.6rem;justify-content:flex-end;}
+  /* ── Security screens ── */
+  .sec-screen{position:fixed;inset:0;background:var(--panel);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:200;}
+  .sec-box{background:var(--paper);border-radius:20px;padding:2.5rem 2rem 2rem;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.35);}
+  .sec-icon{font-size:2.2rem;margin-bottom:.6rem;}
+  .sec-title{font-family:var(--display);font-weight:600;font-size:1.3rem;margin:0 0 .2rem;}
+  .sec-sub{font-family:var(--mono);font-size:.72rem;color:var(--muted);letter-spacing:.05em;margin:0 0 1.8rem;}
+  .sec-input{width:100%;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--line);font-family:var(--body);font-size:1rem;margin-bottom:.6rem;text-align:center;letter-spacing:.15em;}
+  .sec-input:focus{outline:none;border-color:var(--accent);}
+  .sec-btn{width:100%;padding:.75rem;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:var(--display);font-weight:600;font-size:1rem;cursor:pointer;margin-top:.3rem;}
+  .sec-btn:hover{background:var(--accent-dark);}
+  .sec-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .sec-error{font-family:var(--mono);font-size:.74rem;color:var(--danger);min-height:1.1rem;margin:.3rem 0;}
+  .sec-link{font-size:.78rem;color:var(--muted);cursor:pointer;margin-top:1.1rem;display:block;text-decoration:underline;}
+  .sec-link:hover{color:var(--danger);}
+  .sec-hint{font-size:.74rem;color:var(--muted);margin:.5rem 0 0;}
+  /* ── Topbar security buttons ── */
+  .topbar-sec{display:flex;gap:.4rem;margin-left:auto;}
+  .topbar-btn{background:rgba(255,255,255,.1);border:none;border-radius:8px;color:#C7D2D9;font-size:.85rem;padding:.35rem .6rem;cursor:pointer;font-family:var(--mono);}
+  .topbar-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+  .topbar-btn.active{background:var(--accent);color:#fff;}
+  /* ── Privacy masking ── */
+  .masked{letter-spacing:.08em;color:var(--muted);}
+  /* ── Lock timer bar ── */
+  .lock-bar{height:3px;background:var(--accent);transition:width linear;position:absolute;bottom:0;left:0;}
+  .topbar{position:relative;overflow:hidden;}
+  .loading{padding:3rem 2rem;text-align:center;color:var(--muted);font-family:var(--mono);font-size:.8rem;}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+  @media(max-width:560px){
+    .fgrid{grid-template-columns:1fr;}
+    .topbar{padding:1.25rem 1.25rem 1.5rem;}
+    .controls,.filter-row,.grid,.tabs,.load-more,.alert-section{padding-left:1.25rem;padding-right:1.25rem;}
   }
 
-  * { box-sizing: border-box; }
+  /* ─── Operação: Acompanhamento de Contêiner ─────────────────────────── */
+  .op-module{max-width:640px;margin:1.2rem auto;padding:0 2rem 3rem;}
+  .op-summary{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.78rem;color:var(--muted);padding:.5rem 0 1rem;border-bottom:1px solid var(--line);margin-bottom:1.1rem;}
+  .op-summary b{color:var(--ok);font-size:.95rem;}
+  .op-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:.85rem;}
+  .op-card-title{font-family:var(--display);font-weight:600;font-size:.88rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 .8rem;}
+  .op-field{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.65rem;}
+  .op-field:last-child{margin-bottom:0;}
+  .op-field label{font-size:.74rem;color:var(--muted);}
+  .op-field input,.op-field textarea,.op-field select{padding:.5rem .65rem;border-radius:8px;border:1px solid var(--line);font-family:var(--body);font-size:.88rem;background:var(--paper);width:100%;}
+  .op-field textarea{min-height:68px;resize:vertical;}
+  .op-row2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;}
+  /* stages */
+  .op-stage{background:var(--paper);border:1px solid var(--line);border-radius:12px;margin-bottom:.6rem;overflow:hidden;transition:border-color .15s;}
+  .op-stage.is-done{border-color:var(--ok);border-left:4px solid var(--ok);}
+  .op-stage.is-pending{border-color:var(--warn);border-left:4px solid var(--warn);}
+  .op-stage-head{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;cursor:pointer;user-select:none;}
+  .op-stage-head:hover{background:var(--bg);}
+  .op-stage-dot{width:11px;height:11px;border-radius:50%;background:var(--line);flex-shrink:0;}
+  .op-stage.is-done .op-stage-dot{background:var(--ok);}
+  .op-stage.is-pending .op-stage-dot{background:var(--warn);}
+  .op-stage-info{flex:1;}
+  .op-stage-name{font-family:var(--display);font-weight:600;font-size:.9rem;}
+  .op-stage-time{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:.15rem;}
+  .op-stage.is-done .op-stage-time{color:var(--ok);}
+  .op-stage.is-pending .op-stage-time{color:var(--warn);}
+  .op-stage-body{padding:0 1rem;max-height:0;overflow:hidden;transition:max-height .2s ease,padding .2s;}
+  .op-stage-body.open{max-height:260px;padding:.75rem 1rem 1rem;}
+  .op-pending-toggle{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--muted);margin-bottom:.65rem;cursor:pointer;}
+  .op-pending-toggle input{accent-color:var(--warn);}
+  .op-time-controls{display:flex;gap:.5rem;flex-wrap:wrap;}
+  .op-time-controls input[type=date],.op-time-controls input[type=time]{flex:1;min-width:120px;padding:.45rem .6rem;border-radius:8px;border:1px solid var(--line);font-family:var(--mono);font-size:.82rem;background:var(--paper);}
+  .op-btn-now{padding:.45rem .9rem;border-radius:8px;border:1px solid var(--accent);background:var(--accent-tint);color:var(--accent-dark);font-family:var(--body);font-weight:600;font-size:.82rem;cursor:pointer;white-space:nowrap;}
+  .op-btn-now:hover{background:var(--accent);color:#fff;}
+  .op-btn-now:disabled{opacity:.4;cursor:not-allowed;}
+  .op-extra-field{margin-top:.6rem;}
+  .op-extra-field label{font-size:.74rem;color:var(--muted);display:block;margin-bottom:.2rem;}
+  .op-extra-field input{width:100%;padding:.45rem .6rem;border-radius:8px;border:1px solid var(--line);font-family:var(--body);font-size:.85rem;background:var(--paper);}
+  /* channel send */
+  .op-channel{display:flex;flex-direction:column;gap:.1rem;padding:.6rem 0;border-bottom:1px solid var(--line);}
+  .op-channel:last-of-type{border-bottom:none;}
+  .op-channel-check{display:flex;align-items:center;gap:.5rem;font-size:.88rem;cursor:pointer;}
+  .op-channel-check input{accent-color:var(--accent);}
+  .op-channel-input{margin-top:.35rem;padding:.45rem .65rem;border-radius:8px;border:1px solid var(--line);font-family:var(--body);font-size:.85rem;width:100%;background:var(--paper);}
+  .op-hint{font-size:.75rem;color:var(--muted);margin-top:.3rem;}
+  /* search */
+  .op-search-row{display:flex;gap:.5rem;margin-bottom:.6rem;}
+  .op-search-row input{flex:1;padding:.5rem .7rem;border-radius:8px;border:1px solid var(--line);font-family:var(--body);font-size:.88rem;background:var(--paper);}
+  .op-search-row button{padding:.5rem 1rem;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-family:var(--body);font-weight:600;font-size:.85rem;cursor:pointer;}
+  .op-search-row button:hover{border-color:var(--accent);}
+  .op-result-item{padding:.55rem .7rem;border-radius:8px;border:1px solid var(--line);margin-bottom:.35rem;cursor:pointer;background:var(--paper);}
+  .op-result-item:hover{background:var(--bg);}
+  .op-res-title{font-family:var(--display);font-weight:600;font-size:.88rem;}
+  .op-res-sub{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:.15rem;}
+  .op-search-empty{font-size:.82rem;color:var(--muted);text-align:center;padding:.75rem 0;}
+  /* send button */
+  .op-btn-send{width:100%;padding:.85rem;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:var(--display);font-weight:600;font-size:1rem;cursor:pointer;margin-top:.5rem;}
+  .op-btn-send:hover{background:var(--accent-dark);}
+  .op-reset{text-align:center;font-size:.78rem;color:var(--muted);margin-top:1rem;cursor:pointer;text-decoration:underline;}
+  .op-reset:hover{color:var(--danger);}
+  /* toast */
+  .op-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:#fff;font-family:var(--mono);font-size:.8rem;padding:.55rem 1.1rem;border-radius:20px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:300;}
+  .op-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media(max-width:560px){.op-module{padding:0 1rem 3rem;}.op-row2{grid-template-columns:1fr;}}
 
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .wrap {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 20px 16px 80px;
-  }
-
-  header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 18px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  header h1 {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    margin: 0;
-  }
-
-  header .tag {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    background: var(--accent-dim);
-    padding: 3px 8px;
-    border-radius: 5px;
-  }
-
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 14px;
-  }
-
-  .card-title {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    margin: 0 0 12px 0;
-  }
-
-  .field {
-    margin-bottom: 12px;
-  }
-
-  .field:last-child { margin-bottom: 0; }
-
-  .field label {
-    display: block;
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-
-  .field input, .field select, .field textarea {
-    width: 100%;
-    background: var(--panel-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 11px 12px;
-    color: var(--text);
-    font-size: 15px;
-    font-family: inherit;
-    resize: vertical;
-  }
-
-  .field input:focus, .field select:focus, .field textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  .row2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .stage {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 10px;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .stage.is-done {
-    border-color: var(--done-dim);
-  }
-
-  .stage.is-pending {
-    border-color: var(--accent-dim);
-  }
-
-  .stage.is-pending .stage-dot {
-    background: var(--accent);
-  }
-
-  .stage.is-pending .stage-time {
-    color: var(--accent);
-  }
-
-  .stage-head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background: var(--panel);
-  }
-
-  .stage-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--pending);
-    flex-shrink: 0;
-  }
-
-  .stage.is-done .stage-dot {
-    background: var(--done);
-  }
-
-  .stage-info {
-    flex: 1;
-  }
-
-  .stage-name {
-    font-size: 14.5px;
-    font-weight: 600;
-  }
-
-  .stage-time {
-    font-family: var(--mono);
-    font-size: 12.5px;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-
-  .stage.is-done .stage-time {
-    color: var(--done);
-  }
-
-  .stage-body {
-    padding: 0 16px 16px;
-    background: var(--panel);
-    display: none;
-  }
-
-  .stage-body.open {
-    display: block;
-  }
-
-  .pending-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12.5px;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-    cursor: pointer;
-  }
-
-  .pending-toggle input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--accent);
-    flex-shrink: 0;
-    cursor: pointer;
-  }
-
-  .time-controls {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-
-  .time-controls input[type="time"],
-  .time-controls input[type="date"] {
-    flex: 1;
-    min-width: 130px;
-    background: var(--panel-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    color: var(--text);
-    font-size: 15px;
-    font-family: var(--mono);
-  }
-
-  .time-controls input[type="time"]:focus,
-  .time-controls input[type="date"]:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  .btn-now {
-    background: var(--panel-raised);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    border-radius: 8px;
-    padding: 0 14px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .btn-now:hover { border-color: var(--accent); color: var(--accent); }
-
-  .extra-field {
-    margin-bottom: 10px;
-  }
-
-  .extra-field label {
-    display: block;
-    font-size: 12.5px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-
-  .extra-field input {
-    width: 100%;
-    background: var(--panel-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    color: var(--text);
-    font-size: 14.5px;
-    font-family: inherit;
-  }
-
-  .extra-field input:focus { outline: none; border-color: var(--accent); }
-
-  .btn-send {
-    width: 100%;
-    background: var(--accent);
-    color: #1a1106;
-    border: none;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 14.5px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 4px;
-  }
-
-  .btn-send:hover { filter: brightness(1.08); }
-  .btn-send:disabled {
-    background: var(--pending);
-    color: var(--text-dim);
-    cursor: not-allowed;
-  }
-
-  .hint {
-    font-size: 11.5px;
-    color: var(--text-dim);
-    margin-top: 8px;
-    line-height: 1.4;
-  }
-
-  .dest-card {
-    display: none;
-  }
-  .dest-card.visible { display: block; }
-
-  .summary-bar {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 14px;
-    padding: 0 2px;
-  }
-
-  .summary-bar b { color: var(--accent); }
-
-  .toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--done);
-    color: #07261a;
-    padding: 11px 20px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
-    opacity: 0;
-    transition: all 0.25s ease;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .channel-toggle {
-    display: block;
-    background: var(--panel-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-
-  .channel-toggle:has(input[type="checkbox"]:checked) {
-    border-color: var(--accent);
-  }
-
-  .channel-check {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 0;
-  }
-
-  .channel-check input[type="checkbox"] {
-    width: 17px;
-    height: 17px;
-    accent-color: var(--accent);
-    flex-shrink: 0;
-    cursor: pointer;
-  }
-
-  .channel-label {
-    font-size: 14.5px;
-    font-weight: 600;
-  }
-
-  .channel-input {
-    width: 100%;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 9px 11px;
-    color: var(--text);
-    font-size: 14px;
-    font-family: inherit;
-    margin-top: 10px;
-    display: block;
-  }
-
-  .channel-input:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  .btn-send-final {
-    width: 100%;
-    background: var(--accent);
-    color: #1a1106;
-    border: none;
-    border-radius: 10px;
-    padding: 16px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 8px;
-    letter-spacing: 0.01em;
-  }
-
-  .btn-send-final:hover { filter: brightness(1.08); }
-
-  .reset-link {
-    display: block;
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 12.5px;
-    margin-top: 18px;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-
-  .search-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .search-row input {
-    flex: 1;
-    background: var(--panel-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    color: var(--text);
-    font-size: 14px;
-    font-family: inherit;
-  }
-
-  .search-row input:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  .search-row button {
-    background: var(--accent);
-    color: #1a1106;
-    border: none;
-    border-radius: 8px;
-    padding: 0 18px;
-    font-size: 13.5px;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .search-row button:hover { filter: brightness(1.08); }
-
-  .search-result-item {
-    margin-top: 10px;
-    background: var(--panel-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-
-  .search-result-item:hover { border-color: var(--accent); }
-
-  .search-result-item .res-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 3px;
-  }
-
-  .search-result-item .res-sub {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .search-empty {
-    margin-top: 10px;
-    font-size: 13px;
-    color: var(--text-dim);
-  }
 </style>
 </head>
 <body>
-
-<div class="wrap">
-
-  <header>
-    <h1>Acompanhamento de Operação</h1>
-    <span class="tag">CONTÊINER</span>
-  </header>
-
-  <div class="summary-bar">
-    <span>Etapas concluídas: <b id="doneCount">0</b>/4</span>
-    <span id="clockNow"></span>
-  </div>
-
-  <!-- MENSAGEM (primeiro campo) -->
-  <div class="card">
-    <p class="card-title">Mensagem / Observações da operação</p>
-    <div class="field">
-      <textarea id="operMsg" rows="3" placeholder="Ex: Boa tarde, segue as datas e horários da operação..."></textarea>
-    </div>
-  </div>
-
-  <!-- BUSCA DE HISTÓRICO -->
-  <div class="card" id="historyCard">
-    <p class="card-title">Buscar operação anterior</p>
-    <div class="search-row">
-      <input type="text" id="searchQuery" placeholder="Nº do contêiner ou referência..." autocomplete="off">
-      <button type="button" id="searchBtn">Buscar</button>
-    </div>
-    <div id="searchResults"></div>
-  </div>
-
-  <!-- DADOS GERAIS -->
-  <div class="card">
-    <p class="card-title">Dados da operação</p>
-    <div class="field">
-      <label for="driverName">Nome do motorista / funcionário</label>
-      <input type="text" id="driverName" placeholder="Ex: João Silva" autocomplete="off">
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label for="plateCavalo">Placa do cavalo</label>
-        <input type="text" id="plateCavalo" placeholder="Ex: ABC1D23" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="plateReboque">Placa do reboque</label>
-        <input type="text" id="plateReboque" placeholder="Ex: XYZ9E87" autocomplete="off">
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label for="containerNum">Nº do contêiner</label>
-        <input type="text" id="containerNum" placeholder="Ex: ABCU1234567" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="refNum">Referência</label>
-        <input type="text" id="refNum" placeholder="Ex: 88421" autocomplete="off">
-      </div>
-    </div>
-  </div>
-
-  <!-- ETAPAS -->
-  <div id="stagesContainer"></div>
-
-  <!-- DESTINO -->
-  <div class="card dest-card" id="destCard">
-    <p class="card-title">Enviar via</p>
-
-    <label class="channel-toggle" id="toggleEmail">
-      <div class="channel-check">
-        <input type="checkbox" id="useEmail" checked>
-        <span class="channel-label">📧 E-mail</span>
-      </div>
-      <input type="email" id="destEmail" placeholder="cliente@empresa.com" class="channel-input">
-    </label>
-
-    <label class="channel-toggle" id="toggleWhats">
-      <div class="channel-check">
-        <input type="checkbox" id="useWhats" checked>
-        <span class="channel-label">💬 WhatsApp</span>
-      </div>
-      <div class="hint" style="margin-top:4px;margin-bottom:0">Abre o WhatsApp Web — você escolhe a conversa para enviar.</div>
-    </label>
-
-    <div class="hint" style="margin-top:10px">O e-mail fica salvo neste aparelho para os próximos envios.</div>
-  </div>
-
-  <button type="button" class="btn-send-final" id="btnSendFinal">Enviar</button>
-
-  <div class="reset-link" id="resetLink">Limpar todos os dados e começar de novo</div>
-
-</div>
-
-<div class="toast" id="toast"></div>
-
+<h1 class="sr-only">Armesa Logística e Transporte — Gestão de Frota e Operações</h1>
+<div class="app" id="app"><div class="loading">Carregando cadastro…</div></div>
 <script>
-  const STAGES = [
-    { key: 'agendamentoRetirada', label: 'Agendamento / Retirada do contêiner' },
-    { key: 'entrega', label: 'Chegada/entrega no cliente' },
-    { key: 'descarga', label: 'Finalização da descarga' },
-    { key: 'devolucao', label: 'Devolução do vazio', extra: [
-        { key: 'terminalVazio', label: 'Terminal do vazio' }
-      ]
-    },
+// ─── Constantes ──────────────────────────────────────────────────────────────
+const M_PREFIX = 'motorista:';
+const V_PREFIX = 'veiculo:';
+const PAGE_SIZE = 24;
+const CNH_CATEGORIAS = ['A','B','C','D','E','AB','AC','AD','AE'];
+const TIPO_LABELS = {cavalo:'Cavalo',reboque:'Reboque',semireboque:'Semi-reboque',caminhao:'Caminhão (carga simples)'};
+const SITUACAO_LABELS = {ativo:'Ativo',afastado:'Afastado',desligado:'Desligado'};
+
+// ─── Estado ───────────────────────────────────────────────────────────────────
+let motoristas=[], veiculos=[];
+let activeTab='operacao';
+let searchTerm='', activeFilter='all';
+let editingMotoristaId=null, editingVeiculoId=null;
+let motoristaUnlocked=false, veiculoUnlocked=false;
+let currentPage=1, isSaving=false;
+let lastLoadError=null, loadErrors=[];
+let searchDebounceTimer=null;
+let sortM='nome', sortV='placa';
+
+// ─── Segurança ────────────────────────────────────────────────────────────────
+let isLocked = true;
+let isSetup  = false;
+let privacyMode = false;
+let lockTimerId = null;
+const LOCK_MS   = 10 * 60 * 1000; // 10 minutos
+const SEC_KEY   = 'app:sec:hash';  // shared=false → por usuário
+
+// ─── Utilitários ──────────────────────────────────────────────────────────────
+function uid(){ return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  return Math.round((new Date(dateStr+'T00:00:00')-today)/86400000);
+}
+
+function cnhStatus(dateStr){
+  const d=daysUntil(dateStr);
+  if(d===null) return {cls:'',label:'Sem data',d:null};
+  if(d<0)      return {cls:'status-danger',label:'Vencida há '+Math.abs(d)+'d',d};
+  if(d<=30)    return {cls:'status-danger',label:'Vence em '+d+'d',d};
+  if(d<=60)    return {cls:'status-warn',label:'Vence em '+d+'d',d};
+  return {cls:'',label:'Em dia ('+d+'d)',d};
+}
+
+function crlvStatus(dateStr){
+  const d=daysUntil(dateStr);
+  if(d===null) return {cls:'',label:'',d:null};
+  if(d<0)   return {cls:'status-danger',label:'CRLV vencido há '+Math.abs(d)+'d',d};
+  if(d<=30) return {cls:'status-danger',label:'CRLV vence em '+d+'d',d};
+  if(d<=60) return {cls:'status-warn',label:'CRLV vence em '+d+'d',d};
+  return {cls:'',label:'',d};
+}
+
+function calcAge(dateStr){
+  if(!dateStr) return null;
+  const b=new Date(dateStr+'T00:00:00'), t=new Date();
+  let age=t.getFullYear()-b.getFullYear();
+  const m=t.getMonth()-b.getMonth();
+  if(m<0||(m===0&&t.getDate()<b.getDate())) age--;
+  return age;
+}
+
+function fmtDate(s){
+  if(!s) return '—';
+  const [y,m,d]=s.split('-'); return d+'/'+m+'/'+y;
+}
+
+function esc(s){
+  return (s===undefined||s===null)?'':String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function normalizePlaca(p){ return (p||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
+function formatPlaca(p){
+  const n=normalizePlaca(p);
+  if(n.length===7){
+    if(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(n)) return n;
+    if(/^[A-Z]{3}[0-9]{4}$/.test(n)) return n.slice(0,3)+'-'+n.slice(3);
+  }
+  return n;
+}
+
+function cnhBadgeHtml(motoristaId){
+  if(!motoristaId) return '';
+  const m=motoristas.find(x=>x.id===motoristaId);
+  if(!m) return '';
+  const s=cnhStatus(m.cnhVencimento);
+  const bg=s.cls==='status-danger'?'var(--danger-tint)':s.cls==='status-warn'?'var(--warn-tint)':'var(--ok-tint)';
+  const fg=s.cls==='status-danger'?'#7A2A1C':s.cls==='status-warn'?'#704C09':'#1F4D29';
+  return `<span style="font-family:var(--mono);font-size:.72rem;padding:.2rem .55rem;border-radius:20px;background:${bg};color:${fg};">CNH ${s.label}</span>`;
+}
+
+// ─── Mascaramento ────────────────────────────────────────────────────────────
+function maskVal(val){
+  if(!privacyMode||!val) return esc(val);
+  const s=String(val).trim();
+  if(!s||s==='—') return s;
+  return '<span class="masked">'+s.replace(/[0-9A-Za-z]/g,'•')+'</span>';
+}
+
+// ─── Segurança ────────────────────────────────────────────────────────────────
+async function hashPwd(pwd){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pwd+':frota_v1'));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function getStoredHash(){ try{ const r=await window.storage.get(SEC_KEY,false); return r?r.value:null; }catch(e){ return null; } }
+async function setStoredHash(h){ await window.storage.set(SEC_KEY,h,false); }
+async function clearStoredHash(){ try{ await window.storage.delete(SEC_KEY,false); }catch(e){} }
+
+function startLockTimer(){
+  clearTimeout(lockTimerId);
+  lockTimerId=setTimeout(()=>{ isLocked=true; render(); },LOCK_MS);
+}
+function resetLockTimer(){ if(!isLocked) startLockTimer(); }
+['click','keydown','touchstart','mousemove'].forEach(ev=>document.addEventListener(ev,resetLockTimer,{passive:true}));
+
+// ─── Storage ──────────────────────────────────────────────────────────────────
+async function storageGetWithRetry(key,shared,maxTries){
+  maxTries=maxTries||3; let lastErr;
+  for(let i=0;i<maxTries;i++){
+    try{ return await window.storage.get(key,shared); }
+    catch(e){ lastErr=e; if(i<maxTries-1) await new Promise(r=>setTimeout(r,300*(i+1))); }
+  }
+  throw lastErr;
+}
+
+async function loadAll(){
+  lastLoadError=null; loadErrors=[];
+  try{
+    if(!window.storage) throw new Error('window.storage indisponível.');
+    const [mi,vi]=await Promise.all([window.storage.list(M_PREFIX,true),window.storage.list(V_PREFIX,true)]);
+    const mKeys=(mi&&mi.keys)||[], vKeys=(vi&&vi.keys)||[];
+    const mOut=[];
+    for(const k of mKeys){
+      try{ const r=await storageGetWithRetry(k,true); if(r&&r.value) mOut.push(JSON.parse(r.value)); }
+      catch(e){ console.error('Falha ao ler',k,e); loadErrors.push(k); }
+    }
+    const vOut=[];
+    for(const k of vKeys){
+      try{ const r=await storageGetWithRetry(k,true); if(r&&r.value) vOut.push(JSON.parse(r.value)); }
+      catch(e){ console.error('Falha ao ler',k,e); loadErrors.push(k); }
+    }
+    mOut.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+    vOut.sort((a,b)=>(a.placa||'').localeCompare(b.placa||''));
+    motoristas=mOut; veiculos=vOut;
+  }catch(e){
+    console.error('loadAll falhou:',e);
+    lastLoadError=(e&&e.message)?e.message:String(e);
+    motoristas=[]; veiculos=[];
+  }
+  render();
+}
+
+async function saveMotorista(rec){ await window.storage.set(M_PREFIX+rec.id,JSON.stringify(rec),true); }
+async function deleteMotorista(id){ await window.storage.delete(M_PREFIX+id,true); }
+async function saveVeiculo(rec){ await window.storage.set(V_PREFIX+rec.id,JSON.stringify(rec),true); }
+async function deleteVeiculo(id){ await window.storage.delete(V_PREFIX+id,true); }
+
+// ─── Campos ───────────────────────────────────────────────────────────────────
+function motoristaFields(){
+  return [
+    ['nome',          'Nome do motorista',          false,'full'],
+    ['situacao',      'Situação',                   false,'situacao'],
+    ['cpf',           'CPF',                         true],
+    ['rg',            'RG',                          true],
+    ['dataNascimento','Data de nascimento',           false,'date'],
+    ['cnhNumero',     'Nº CNH',                      true],
+    ['cnhCategoria',  'Categoria CNH',               false,'categoria'],
+    ['telefone',      'Telefone',                    true],
+    ['cnhExpedicao',  'Expedição CNH',               false,'date'],
+    ['cnhVencimento', 'Vencimento CNH',              false,'date'],
+    ['antt',          'Nº ANTT (se houver)',          true],
+    ['observacoes',   'Observações',                 false,'textarea'],
   ];
+}
 
-  const STORAGE_KEY = 'containerTrackerState_v1';
-  const HISTORY_KEY = 'containerTrackerHistory_v1';
+function veiculoFields(){
+  return [
+    ['placa',          'Placa',                        true,'placa'],
+    ['marcaModelo',    'Marca/modelo',                 false],
+    ['renavam',        'Renavam',                      true],
+    ['chassi',         'Chassi',                       true],
+    ['ano',            'Ano de fabricação',            true],
+    ['exercicio',      'Ano de exercício (CRLV-e)',    true],
+    ['crlvVencimento', 'Vencimento do CRLV',           false,'date'],
+    ['cor',            'Cor',                          false],
+    ['antt',           'Nº ANTT',                      true],
+    ['anttNome',       'Titular do ANTT',              false,'full'],
+    ['anttDoc',        'CPF/CNPJ do titular ANTT',     true],
+    ['proprietario',   'Nome do proprietário (CRLV-e)',false,'full'],
+    ['proprietarioDoc','CPF/CNPJ do proprietário',     true],
+    ['observacoes',    'Observações',                  false,'textarea'],
+  ];
+}
 
-  function loadHistory() {
-    try {
-      const raw = localStorage.getItem(HISTORY_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return [];
-  }
+function blankMotorista(){
+  return {id:uid(),nome:'',situacao:'ativo',cpf:'',rg:'',dataNascimento:'',cnhNumero:'',cnhCategoria:'',cnhExpedicao:'',cnhVencimento:'',telefone:'',antt:'',observacoes:''};
+}
+function blankVeiculo(){
+  return {id:uid(),tipo:'cavalo',placa:'',marcaModelo:'',renavam:'',chassi:'',ano:'',exercicio:'',crlvVencimento:'',cor:'',antt:'',anttNome:'',anttDoc:'',proprietario:'',proprietarioDoc:'',motoristaAtualId:'',observacoes:'',historicoMotoristas:[]};
+}
 
-  function saveToHistory() {
-    if (!state.containerNum && !state.refNum) return;
-    const history = loadHistory();
-    const entry = {
-      id: Date.now(),
-      savedAt: new Date().toISOString(),
-      driverName: state.driverName,
-      plateCavalo: state.plateCavalo,
-      plateReboque: state.plateReboque,
-      containerNum: state.containerNum,
-      refNum: state.refNum,
-      operMsg: state.operMsg,
-      stages: JSON.parse(JSON.stringify(state.stages)),
-    };
-    // Remove entrada anterior com mesmo contêiner ou referência
-    const filtered = history.filter(h =>
-      !(h.containerNum && h.containerNum === entry.containerNum) &&
-      !(h.refNum && h.refNum === entry.refNum)
-    );
-    filtered.unshift(entry);
-    // Guarda no máximo 50 entradas
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, 50)));
-  }
+function formatAssigned(list){
+  const cavalos=list.filter(v=>v.tipo==='cavalo');
+  const caminhoes=list.filter(v=>v.tipo==='caminhao');
+  const reboques=list.filter(v=>v.tipo!=='cavalo'&&v.tipo!=='caminhao');
+  const parts=[];
+  cavalos.forEach(v=>parts.push({label:'Cavalo',placa:v.placa,id:v.id}));
+  caminhoes.forEach(v=>parts.push({label:'Caminhão',placa:v.placa,id:v.id}));
+  reboques.forEach((v,i)=>parts.push({label:'Reboque '+(i+1),placa:v.placa,id:v.id}));
+  return parts;
+}
 
-  function searchHistory(query) {
-    if (!query.trim()) return [];
-    const q = query.trim().toLowerCase();
-    return loadHistory().filter(h =>
-      (h.containerNum && h.containerNum.toLowerCase().includes(q)) ||
-      (h.refNum && h.refNum.toLowerCase().includes(q))
-    );
-  }
-
-  function applyHistoryEntry(entry) {
-    state.driverName = entry.driverName || '';
-    state.plateCavalo = entry.plateCavalo || '';
-    state.plateReboque = entry.plateReboque || '';
-    state.containerNum = entry.containerNum || '';
-    state.refNum = entry.refNum || '';
-    state.operMsg = entry.operMsg || '';
-    // Restaura etapas salvas, ou limpa as que não existirem no registro
-    STAGES.forEach(s => {
-      state.stages[s.key] = (entry.stages && entry.stages[s.key])
-        ? entry.stages[s.key]
-        : { date: '', time: '', pending: false, sent: false, extra: {} };
+// ─── Exportar CSV ─────────────────────────────────────────────────────────────
+function buildCSV(type){
+  let headers, rows;
+  if(type==='motoristas'){
+    headers=['Nome','CPF','RG','Nascimento','Idade','Situacao','CNH','Categoria','Expedicao CNH','Vencimento CNH','ANTT','Telefone','Observacoes'];
+    rows=motoristas.map(m=>[
+      m.nome,m.cpf,m.rg,fmtDate(m.dataNascimento),calcAge(m.dataNascimento)||'',
+      SITUACAO_LABELS[m.situacao||'ativo'],m.cnhNumero,m.cnhCategoria,
+      fmtDate(m.cnhExpedicao),fmtDate(m.cnhVencimento),m.antt||'',m.telefone||'',m.observacoes||''
+    ]);
+  } else {
+    headers=['Placa','Tipo','Modelo','Renavam','Chassi','Ano','Exercicio','Venc.CRLV','Cor','ANTT','Titular ANTT','CPF/CNPJ ANTT','Proprietario','CPF/CNPJ Prop.','Motorista Atual','Observacoes'];
+    rows=veiculos.map(v=>{
+      const drv=motoristas.find(m=>m.id===v.motoristaAtualId);
+      return [formatPlaca(v.placa),TIPO_LABELS[v.tipo]||v.tipo,v.marcaModelo||'',v.renavam||'',v.chassi||'',
+        v.ano||'',v.exercicio||'',fmtDate(v.crlvVencimento),v.cor||'',v.antt||'',v.anttNome||'',v.anttDoc||'',
+        v.proprietario||'',v.proprietarioDoc||'',drv?drv.nome:'',v.observacoes||''];
     });
-    state.openStage = null;
-    saveState();
-    render();
-    document.getElementById('searchResults').innerHTML = '';
-    document.getElementById('searchQuery').value = '';
-    showToast('Operação carregada com todos os dados');
   }
+  return [headers,...rows].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+}
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return {
-      driverName: '', plateCavalo: '', plateReboque: '', containerNum: '', refNum: '',
-      operMsg: '',
-      destEmail: '',
-      stages: {}, openStage: null
-    };
+function doExportCSV(type){
+  const csv=buildCSV(type);
+  const title=type==='motoristas'?`Motoristas (${motoristas.length} registros)`:`Veículos (${veiculos.length} registros)`;
+  const overlay=document.createElement('div');
+  overlay.className='csv-modal';
+  overlay.id='csv-overlay';
+  overlay.innerHTML=`
+    <div class="csv-box">
+      <h3>📋 Exportar CSV — ${title}</h3>
+      <p style="font-size:.8rem;color:var(--muted);margin:0;">Clique em <b>Selecionar tudo</b> e copie (Ctrl+C / Cmd+C). Cole em um editor de texto e salve como <b>${type}.csv</b>.</p>
+      <textarea id="csv-content" readonly onclick="this.select()">${csv}</textarea>
+      <div class="csv-actions">
+        <button class="btn" onclick="document.getElementById('csv-content').select();document.execCommand('copy');this.textContent='✓ Copiado!';setTimeout(()=>this.textContent='Copiar tudo',2000);">Copiar tudo</button>
+        <button class="btn primary" onclick="document.getElementById('csv-overlay').remove();">Fechar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=>{ const ta=document.getElementById('csv-content'); if(ta) ta.select(); },100);
+}
+
+// ─── Namespace público ────────────────────────────────────────────────────────
+const App={};
+window.App=App;
+
+// ─── Métodos de segurança ─────────────────────────────────────────────────────
+App.lockApp=function(){ isLocked=true; clearTimeout(lockTimerId); render(); };
+
+App.togglePrivacy=function(){ privacyMode=!privacyMode; render(); };
+
+App.tryUnlock=async function(){
+  const input=document.getElementById('pwd-input');
+  const errEl=document.getElementById('pwd-error');
+  const btn=document.getElementById('pwd-btn');
+  if(!input||!errEl) return;
+  const val=input.value;
+  if(!val){ errEl.textContent='Digite a senha.'; return; }
+  btn.disabled=true; btn.textContent='Verificando…';
+  const hash=await hashPwd(val);
+  const stored=await getStoredHash();
+  if(hash===stored){
+    isLocked=false; startLockTimer(); render();
+  } else {
+    errEl.textContent='Senha incorreta. Tente novamente.';
+    input.value=''; input.focus();
+    btn.disabled=false; btn.textContent='Entrar';
   }
+};
 
-  let state = loadState();
-  STAGES.forEach(s => {
-    if (!state.stages[s.key]) {
-      state.stages[s.key] = { date: '', time: '', pending: false, sent: false, extra: {} };
-    }
-    if (state.stages[s.key].pending === undefined) {
-      state.stages[s.key].pending = false;
-    }
-  });
+App.trySetup=async function(){
+  const p1=document.getElementById('pwd-new');
+  const p2=document.getElementById('pwd-confirm');
+  const errEl=document.getElementById('pwd-error');
+  const btn=document.getElementById('pwd-btn');
+  if(!p1||!p2||!errEl) return;
+  if(p1.value.length<4){ errEl.textContent='Mínimo 4 caracteres.'; return; }
+  if(p1.value!==p2.value){ errEl.textContent='As senhas não coincidem.'; return; }
+  btn.disabled=true; btn.textContent='Salvando…';
+  const hash=await hashPwd(p1.value);
+  await setStoredHash(hash);
+  isSetup=false; isLocked=false; startLockTimer(); render();
+};
 
-  function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
+App.showReset=function(){
+  if(!confirm('Redefinir a senha apagará o acesso atual.\nVocê precisará criar uma nova senha.\n\nConfirma?')) return;
+  clearStoredHash().then(()=>{ isSetup=true; isLocked=false; render(); });
+};
 
-  function nowHM() {
-    const d = new Date();
-    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-  }
-
-  function todayYMD() {
-    const d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  }
-
-  function formatDateBR(ymd) {
-    if (!ymd) return '';
-    const parts = ymd.split('-');
-    if (parts.length !== 3) return ymd;
-    return parts[2] + '/' + parts[1] + '/' + parts[0];
-  }
-
-  function updateClock() {
-    document.getElementById('clockNow').textContent = nowHM();
-  }
-  updateClock();
-  setInterval(updateClock, 30000);
-
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2400);
-  }
-
-  function escapeHtml(str) {
-    return (str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function render() {
-    document.getElementById('driverName').value = state.driverName;
-    document.getElementById('plateCavalo').value = state.plateCavalo;
-    document.getElementById('plateReboque').value = state.plateReboque;
-    document.getElementById('containerNum').value = state.containerNum;
-    document.getElementById('refNum').value = state.refNum;
-    document.getElementById('operMsg').value = state.operMsg || '';
-    document.getElementById('destEmail').value = state.destEmail || '';
-
-    const container = document.getElementById('stagesContainer');
-    container.innerHTML = '';
-
-    let doneCount = 0;
-
-    STAGES.forEach((stageDef, idx) => {
-      const st = state.stages[stageDef.key];
-      const isFilled = st.time && st.date;
-      if (isFilled) doneCount++;
-
-      const isOpen = state.openStage === stageDef.key;
-
-      const stageEl = document.createElement('div');
-      stageEl.className = 'stage' + (isFilled ? ' is-done' : st.pending ? ' is-pending' : '');
-
-      let timeDisplay;
-      if (st.pending) {
-        timeDisplay = 'A confirmar';
-      } else if (isFilled) {
-        timeDisplay = formatDateBR(st.date) + ' às ' + st.time;
-      } else if (st.date || st.time) {
-        timeDisplay = 'Incompleto (falta data ou horário)';
-      } else {
-        timeDisplay = 'Pendente';
-      }
-
-      const head = document.createElement('div');
-      head.className = 'stage-head';
-      head.innerHTML = `
-        <div class="stage-dot"></div>
-        <div class="stage-info">
-          <div class="stage-name">${idx + 1}. ${escapeHtml(stageDef.label)}</div>
-          <div class="stage-time">${timeDisplay}</div>
+App.changePassword=function(){
+  const modal=document.getElementById('modal-slot');
+  if(!modal) return;
+  modal.innerHTML=`
+    <div class="modal-bg" onclick="if(event.target===this) document.getElementById('modal-slot').innerHTML=''">
+      <div class="modal" style="max-width:360px;text-align:center;">
+        <button class="modal-close" onclick="document.getElementById('modal-slot').innerHTML=''">×</button>
+        <h2>Mudar senha</h2>
+        <p class="sub">Informe a senha atual e a nova</p>
+        <div class="field" style="margin-bottom:.6rem;text-align:left;"><label>Senha atual</label><input type="password" id="cp-old" class="sec-input" style="margin:0;letter-spacing:.1em;"></div>
+        <div class="field" style="margin-bottom:.6rem;text-align:left;"><label>Nova senha (mín. 4 caracteres)</label><input type="password" id="cp-new" class="sec-input" style="margin:0;letter-spacing:.1em;"></div>
+        <div class="field" style="margin-bottom:.6rem;text-align:left;"><label>Confirmar nova senha</label><input type="password" id="cp-confirm" class="sec-input" style="margin:0;letter-spacing:.1em;"></div>
+        <div id="cp-error" class="sec-error"></div>
+        <div class="modal-actions">
+          <span></span>
+          <div style="display:flex;gap:.6rem;">
+            <button class="btn" onclick="document.getElementById('modal-slot').innerHTML=''">Cancelar</button>
+            <button id="cp-btn" class="btn primary" onclick="App._doChangePwd()">Salvar nova senha</button>
+          </div>
         </div>
-      `;
-      head.onclick = () => {
-        state.openStage = isOpen ? null : stageDef.key;
-        saveState();
-        render();
-      };
+      </div>
+    </div>`;
+};
 
-      const body = document.createElement('div');
-      body.className = 'stage-body' + (isOpen ? ' open' : '');
+App._doChangePwd=async function(){
+  const oldVal=document.getElementById('cp-old')?.value;
+  const newVal=document.getElementById('cp-new')?.value;
+  const confVal=document.getElementById('cp-confirm')?.value;
+  const errEl=document.getElementById('cp-error');
+  const btn=document.getElementById('cp-btn');
+  if(!oldVal||!newVal||!confVal){ errEl.textContent='Preencha todos os campos.'; return; }
+  if(newVal.length<4){ errEl.textContent='Nova senha: mínimo 4 caracteres.'; return; }
+  if(newVal!==confVal){ errEl.textContent='Nova senha e confirmação não coincidem.'; return; }
+  btn.disabled=true; btn.textContent='Salvando…';
+  const oldHash=await hashPwd(oldVal);
+  const stored=await getStoredHash();
+  if(oldHash!==stored){ errEl.textContent='Senha atual incorreta.'; btn.disabled=false; btn.textContent='Salvar nova senha'; return; }
+  await setStoredHash(await hashPwd(newVal));
+  document.getElementById('modal-slot').innerHTML='';
+  alert('Senha alterada com sucesso!');
+};
 
-      let extraHtml = '';
-      if (stageDef.extra) {
-        stageDef.extra.forEach(ex => {
-          extraHtml += `
-            <div class="extra-field">
-              <label>${escapeHtml(ex.label)}</label>
-              <input type="text" data-extra-key="${ex.key}" data-stage="${stageDef.key}" value="${escapeHtml(st.extra[ex.key] || '')}" placeholder="Ex: Terminal Santos Brasil">
-            </div>
-          `;
-        });
+
+
+App.setTab=function(t){ activeTab=t; searchTerm=''; activeFilter='all'; currentPage=1; render(); };
+App.setFilter=function(f){ activeFilter=f; currentPage=1; render(); };
+App.loadMore=function(){ currentPage++; render(); };
+App.goToVeiculosOf=function(nome){ activeTab='veiculos'; searchTerm=nome; activeFilter='all'; currentPage=1; render(); };
+App.setSortM=function(v){ sortM=v; render(); };
+App.setSortV=function(v){ sortV=v; render(); };
+App.exportCSV=function(type){ doExportCSV(type); };
+
+App.openNewMotorista=function(){ editingMotoristaId='new'; motoristaUnlocked=true; render(); };
+App.openEditMotorista=function(id){ editingMotoristaId=id; motoristaUnlocked=false; render(); };
+App.closeMotoristaModal=function(){ editingMotoristaId=null; render(); };
+App.unlockMotorista=function(){ motoristaUnlocked=true; render(); };
+
+App.openNewVeiculo=function(){ editingVeiculoId='new'; veiculoUnlocked=true; render(); };
+App.openEditVeiculo=function(id){ editingVeiculoId=id; veiculoUnlocked=false; render(); };
+App.closeVeiculoModal=function(){ editingVeiculoId=null; render(); };
+App.unlockVeiculo=function(){ veiculoUnlocked=true; render(); };
+
+App.recarregarDados=function(){ document.getElementById('app').innerHTML='<div class="loading">Recarregando…</div>'; boot(); };
+
+App.updateCnhBadge=function(){
+  const sel=document.getElementById('f-motoristaAtualId');
+  const badge=document.getElementById('cnh-badge');
+  if(!sel||!badge) return;
+  badge.innerHTML=cnhBadgeHtml(sel.value);
+};
+
+App.submitMotorista=async function(id,isNew){
+  if(isSaving) return;
+  isSaving=true;
+  const btn=document.getElementById('btn-salvar-motorista');
+  if(btn){ btn.disabled=true; btn.textContent='Salvando…'; }
+  try{
+    const modal=document.getElementById('modal-motorista');
+    if(!modal) return;
+    const rec=isNew?blankMotorista():(motoristas.find(r=>r.id===id)||blankMotorista());
+    rec.id=id;
+    modal.querySelectorAll('[data-key]').forEach(el=>{ rec[el.dataset.key]=el.value.trim?el.value.trim():el.value; });
+    if(!rec.nome){ alert('Informe o nome do motorista.'); return; }
+    await saveMotorista(rec);
+    editingMotoristaId=null;
+    await loadAll();
+  }catch(e){ console.error(e); alert('Erro ao salvar: '+e.message); }
+  finally{ isSaving=false; }
+};
+
+App.confirmDeleteMotorista=async function(id){
+  if(!confirm('Excluir este motorista? Veículos vinculados ficarão sem motorista atual.')) return;
+  await deleteMotorista(id);
+  for(const v of veiculos){ if(v.motoristaAtualId===id){ v.motoristaAtualId=''; await saveVeiculo(v); } }
+  editingMotoristaId=null;
+  await loadAll();
+};
+
+App.submitVeiculo=async function(id,isNew){
+  if(isSaving) return;
+  isSaving=true;
+  const btn=document.getElementById('btn-salvar-veiculo');
+  if(btn){ btn.disabled=true; btn.textContent='Salvando…'; }
+  try{
+    const modal=document.getElementById('modal-veiculo');
+    if(!modal) return;
+    const oldRec=!isNew?veiculos.find(r=>r.id===id):null;
+    const rec=isNew?blankVeiculo():(oldRec||blankVeiculo());
+    rec.id=id;
+    if(!rec.historicoMotoristas) rec.historicoMotoristas=[];
+    modal.querySelectorAll('[data-key]').forEach(el=>{ rec[el.dataset.key]=el.value.trim?el.value.trim():el.value; });
+    rec.placa=normalizePlaca(rec.placa);
+    // Track motorista history
+    if(oldRec&&oldRec.motoristaAtualId&&oldRec.motoristaAtualId!==rec.motoristaAtualId){
+      const oldDrv=motoristas.find(m=>m.id===oldRec.motoristaAtualId);
+      rec.historicoMotoristas.push({
+        id:oldRec.motoristaAtualId,
+        nome:oldDrv?oldDrv.nome:oldRec.motoristaAtualId,
+        dataDesvinculo:new Date().toISOString().slice(0,10)
+      });
+    }
+    if(!rec.placa){ alert('Informe a placa do veículo.'); return; }
+    await saveVeiculo(rec);
+    editingVeiculoId=null;
+    await loadAll();
+  }catch(e){ console.error(e); alert('Erro ao salvar: '+e.message); }
+  finally{ isSaving=false; }
+};
+
+App.confirmDeleteVeiculo=async function(id){
+  if(!confirm('Excluir este veículo? Essa ação não pode ser desfeita.')) return;
+  await deleteVeiculo(id);
+  editingVeiculoId=null;
+  await loadAll();
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MÓDULO: Acompanhamento de Operação — Contêiner
+// ═══════════════════════════════════════════════════════════════════════════════
+const OP_STAGES = [
+  { key:'agendamentoRetirada', label:'Agendamento / Retirada do contêiner' },
+  { key:'entrega',             label:'Chegada/entrega no cliente' },
+  { key:'devolucao',           label:'Devolução do vazio', extra:[
+      { key:'terminalVazio', label:'Terminal do vazio' }
+    ]
+  },
+];
+const OP_STATE_KEY  = 'op:state';
+const OP_HIST_PFX   = 'op:hist:';
+
+let opState = { driverName:'',plateCavalo:'',plateReboque:'',containerNum:'',refNum:'',operMsg:'',destEmail:'',stages:{},openStage:null };
+let opClockTimer = null;
+
+function opBlankStages(){
+  const s={};
+  OP_STAGES.forEach(st=>{ s[st.key]={date:'',time:'',pending:false,sent:false,extra:{}}; });
+  return s;
+}
+
+// ── Storage ──────────────────────────────────────────────────────────────────
+async function opLoadState(){
+  try{
+    const r=await window.storage.get(OP_STATE_KEY,false);
+    if(r&&r.value){
+      opState=JSON.parse(r.value);
+      OP_STAGES.forEach(st=>{
+        if(!opState.stages[st.key]) opState.stages[st.key]={date:'',time:'',pending:false,sent:false,extra:{}};
+        if(opState.stages[st.key].pending===undefined) opState.stages[st.key].pending=false;
+      });
+    } else {
+      opState.stages=opBlankStages();
+    }
+  }catch(e){ opState.stages=opBlankStages(); }
+}
+async function opSaveState(){
+  try{ await window.storage.set(OP_STATE_KEY,JSON.stringify(opState),false); }catch(e){}
+}
+async function opLoadHistory(){
+  try{
+    const keys=(await window.storage.list(OP_HIST_PFX,false))?.keys||[];
+    const out=[];
+    for(const k of keys){ try{ const r=await window.storage.get(k,false); if(r&&r.value) out.push(JSON.parse(r.value)); }catch(e){} }
+    return out.sort((a,b)=>b.id-a.id);
+  }catch(e){ return []; }
+}
+async function opSaveToHistory(){
+  if(!opState.containerNum&&!opState.refNum) return;
+  const entry={
+    id:Date.now(), savedAt:new Date().toISOString(),
+    driverName:opState.driverName, plateCavalo:opState.plateCavalo,
+    plateReboque:opState.plateReboque, containerNum:opState.containerNum,
+    refNum:opState.refNum, operMsg:opState.operMsg,
+    stages:JSON.parse(JSON.stringify(opState.stages))
+  };
+  try{
+    // Remove entries with same container/ref
+    const all=await opLoadHistory();
+    for(const h of all){
+      if((h.containerNum&&h.containerNum===entry.containerNum)||(h.refNum&&h.refNum===entry.refNum)){
+        try{ await window.storage.delete(OP_HIST_PFX+h.id,false); }catch(e){}
       }
+    }
+    await window.storage.set(OP_HIST_PFX+entry.id,JSON.stringify(entry),false);
+    // Keep max 50
+    const updated=await opLoadHistory();
+    if(updated.length>50){
+      for(const old of updated.slice(50)){
+        try{ await window.storage.delete(OP_HIST_PFX+old.id,false); }catch(e){}
+      }
+    }
+  }catch(e){}
+}
 
-      body.innerHTML = `
-        <label class="pending-toggle">
-          <input type="checkbox" data-stage="${stageDef.key}" class="pending-checkbox" ${st.pending ? 'checked' : ''}>
-          <span>Horário ainda não definido (marcar como "A confirmar")</span>
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function opNowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function opTodayYMD(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function opFmtDate(ymd){ if(!ymd) return ''; const p=ymd.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:ymd; }
+function opShowToast(msg){ const t=document.getElementById('op-toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function opRender(){
+  const g=id=>document.getElementById(id);
+  if(!g('op-driverName')) return;
+  g('op-driverName').value=opState.driverName||'';
+  g('op-plateCavalo').value=opState.plateCavalo||'';
+  g('op-plateReboque').value=opState.plateReboque||'';
+  g('op-containerNum').value=opState.containerNum||'';
+  g('op-refNum').value=opState.refNum||'';
+  g('op-operMsg').value=opState.operMsg||'';
+  g('op-destEmail').value=opState.destEmail||'';
+
+  const cont=g('op-stagesContainer');
+  cont.innerHTML='';
+  let doneCount=0;
+
+  OP_STAGES.forEach((stageDef,idx)=>{
+    const st=opState.stages[stageDef.key];
+    const isFilled=st.time&&st.date;
+    if(isFilled) doneCount++;
+    const isOpen=opState.openStage===stageDef.key;
+
+    let timeDisplay;
+    if(st.pending) timeDisplay='A confirmar';
+    else if(isFilled) timeDisplay=opFmtDate(st.date)+' às '+st.time;
+    else if(st.date||st.time) timeDisplay='Incompleto (falta data ou horário)';
+    else timeDisplay='Pendente';
+
+    let extraHtml='';
+    if(stageDef.extra){
+      stageDef.extra.forEach(ex=>{
+        extraHtml+=`<div class="op-extra-field"><label>${esc(ex.label)}</label><input type="text" data-extra-key="${ex.key}" data-stage="${stageDef.key}" value="${esc(st.extra[ex.key]||'')}" placeholder="Ex: Terminal Santos Brasil"></div>`;
+      });
+    }
+
+    const el=document.createElement('div');
+    el.className='op-stage'+(isFilled?' is-done':st.pending?' is-pending':'');
+    el.innerHTML=`
+      <div class="op-stage-head" data-stagekey="${stageDef.key}">
+        <div class="op-stage-dot"></div>
+        <div class="op-stage-info">
+          <div class="op-stage-name">${idx+1}. ${esc(stageDef.label)}</div>
+          <div class="op-stage-time">${timeDisplay}</div>
+        </div>
+        <span style="font-family:var(--mono);font-size:.75rem;color:var(--muted);">${isOpen?'▲':'▼'}</span>
+      </div>
+      <div class="op-stage-body${isOpen?' open':''}">
+        <label class="op-pending-toggle">
+          <input type="checkbox" data-stage="${stageDef.key}" class="op-pending-chk" ${st.pending?'checked':''}>&nbsp;Horário ainda não definido ("A confirmar")
         </label>
-        <div class="time-controls">
-          <input type="date" data-stage="${stageDef.key}" class="date-input" value="${st.date || ''}" ${st.pending ? 'disabled' : ''}>
-          <input type="time" data-stage="${stageDef.key}" class="time-input" value="${st.time || ''}" ${st.pending ? 'disabled' : ''}>
-          <button type="button" class="btn-now" data-stage="${stageDef.key}" ${st.pending ? 'disabled' : ''}>Agora</button>
+        <div class="op-time-controls">
+          <input type="date" data-stage="${stageDef.key}" class="op-date-inp" value="${st.date||''}" ${st.pending?'disabled':''}>
+          <input type="time" data-stage="${stageDef.key}" class="op-time-inp" value="${st.time||''}" ${st.pending?'disabled':''}>
+          <button type="button" class="op-btn-now" data-stage="${stageDef.key}" ${st.pending?'disabled':''}>Agora</button>
         </div>
         ${extraHtml}
-      `;
+      </div>`;
+    cont.appendChild(el);
+  });
 
-      stageEl.appendChild(head);
-      stageEl.appendChild(body);
-      container.appendChild(stageEl);
-    });
+  const dc=g('op-doneCount');
+  if(dc) dc.textContent=doneCount;
+  opAttachStageEvents();
+}
 
-    document.getElementById('doneCount').textContent = doneCount;
+function opAttachStageEvents(){
+  document.querySelectorAll('.op-stage-head').forEach(h=>{
+    h.onclick=()=>{
+      const k=h.dataset.stagekey;
+      opState.openStage=(opState.openStage===k?null:k);
+      opSaveState(); opRender();
+    };
+  });
+  document.querySelectorAll('.op-pending-chk').forEach(chk=>{
+    chk.onchange=(e)=>{
+      const k=e.target.dataset.stage;
+      opState.stages[k].pending=e.target.checked;
+      if(e.target.checked){ opState.stages[k].date=''; opState.stages[k].time=''; }
+      opSaveState(); opRender();
+      opState.openStage=k; opSaveState();
+    };
+  });
+  document.querySelectorAll('.op-date-inp').forEach(inp=>{
+    inp.onchange=(e)=>{ opState.stages[e.target.dataset.stage].date=e.target.value; opSaveState(); opRender(); opState.openStage=e.target.dataset.stage; opSaveState(); };
+  });
+  document.querySelectorAll('.op-time-inp').forEach(inp=>{
+    inp.onchange=(e)=>{ opState.stages[e.target.dataset.stage].time=e.target.value; opSaveState(); opRender(); opState.openStage=e.target.dataset.stage; opSaveState(); };
+  });
+  document.querySelectorAll('.op-btn-now').forEach(btn=>{
+    btn.onclick=(e)=>{
+      const k=e.target.dataset.stage;
+      opState.stages[k].time=opNowHM(); opState.stages[k].date=opTodayYMD();
+      opSaveState(); opRender(); opState.openStage=k; opSaveState();
+    };
+  });
+  document.querySelectorAll('[data-extra-key]').forEach(inp=>{
+    inp.onchange=(e)=>{ opState.stages[e.target.dataset.stage].extra[e.target.dataset.extraKey]=e.target.value; opSaveState(); };
+  });
+}
 
-    const destCard = document.getElementById('destCard');
-    destCard.classList.add('visible');
+function opUpperAlnum(val){ return val.toUpperCase().replace(/[^A-Z0-9]/g,''); }
 
-    attachStageEvents();
-  }
+function opApplyUpperAlnum(id,stateKey){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input',()=>{
+    const cur=el.selectionStart;
+    el.value=opUpperAlnum(el.value);
+    el.setSelectionRange(cur,cur);
+    opState[stateKey]=el.value;
+    opSaveState();
+  });
+}
 
-  function attachStageEvents() {
-    document.querySelectorAll('.pending-checkbox').forEach(chk => {
-      chk.onchange = (e) => {
-        const stageKey = e.target.dataset.stage;
-        state.stages[stageKey].pending = e.target.checked;
-        if (e.target.checked) {
-          state.stages[stageKey].date = '';
-          state.stages[stageKey].time = '';
-        }
-        saveState();
-        render();
-        state.openStage = stageKey;
-        saveState();
+function opAttachGeneralEvents(){
+  const g=id=>document.getElementById(id);
+  const dn=g('op-driverName'); if(dn) dn.oninput=(e)=>{ opState.driverName=e.target.value; opSaveState(); };
+  opApplyUpperAlnum('op-plateCavalo','plateCavalo');
+  opApplyUpperAlnum('op-plateReboque','plateReboque');
+  opApplyUpperAlnum('op-containerNum','containerNum');
+  opApplyUpperAlnum('op-refNum','refNum');
+  const om=g('op-operMsg'); if(om) om.oninput=(e)=>{ opState.operMsg=e.target.value; opSaveState(); };
+  const de=g('op-destEmail'); if(de) de.oninput=(e)=>{ opState.destEmail=e.target.value; opSaveState(); };
+
+  const sbtn=g('op-searchBtn');
+  if(sbtn) sbtn.onclick=async()=>{
+    const q=g('op-searchQuery').value;
+    const cont=g('op-searchResults');
+    if(!q.trim()){ cont.innerHTML='<div class="op-search-empty">Digite o número do contêiner ou referência.</div>'; return; }
+    const ql=q.trim().toLowerCase();
+    const all=await opLoadHistory();
+    const results=all.filter(h=>(h.containerNum&&h.containerNum.toLowerCase().includes(ql))||(h.refNum&&h.refNum.toLowerCase().includes(ql)));
+    cont.innerHTML='';
+    if(!results.length){ cont.innerHTML='<div class="op-search-empty">Nenhuma operação encontrada.</div>'; return; }
+    results.forEach(entry=>{
+      const div=document.createElement('div');
+      div.className='op-result-item';
+      const date=entry.savedAt?new Date(entry.savedAt).toLocaleDateString('pt-BR'):'';
+      div.innerHTML=`<div class="op-res-title">📦 ${esc(entry.containerNum||'—')} &nbsp;·&nbsp; Ref: ${esc(entry.refNum||'—')}</div><div class="op-res-sub">${esc(entry.driverName||'—')} &nbsp;·&nbsp; ${esc(entry.plateCavalo||'—')} / ${esc(entry.plateReboque||'—')} &nbsp;·&nbsp; ${date}</div>`;
+      div.onclick=()=>{
+        opState.driverName=entry.driverName||''; opState.plateCavalo=entry.plateCavalo||'';
+        opState.plateReboque=entry.plateReboque||''; opState.containerNum=entry.containerNum||'';
+        opState.refNum=entry.refNum||''; opState.operMsg=entry.operMsg||'';
+        OP_STAGES.forEach(s=>{ opState.stages[s.key]=(entry.stages&&entry.stages[s.key])?entry.stages[s.key]:{date:'',time:'',pending:false,sent:false,extra:{}}; });
+        opState.openStage=null;
+        opSaveState(); opRender();
+        g('op-searchResults').innerHTML=''; g('op-searchQuery').value='';
+        opShowToast('Operação carregada com todos os dados');
       };
-    });
-
-    document.querySelectorAll('.date-input').forEach(inp => {
-      inp.onchange = (e) => {
-        const stageKey = e.target.dataset.stage;
-        state.stages[stageKey].date = e.target.value;
-        saveState();
-        render();
-        state.openStage = stageKey;
-        saveState();
-      };
-    });
-
-    document.querySelectorAll('.time-input').forEach(inp => {
-      inp.onchange = (e) => {
-        const stageKey = e.target.dataset.stage;
-        state.stages[stageKey].time = e.target.value;
-        saveState();
-        render();
-        state.openStage = stageKey;
-        saveState();
-      };
-    });
-
-    document.querySelectorAll('.btn-now').forEach(btn => {
-      btn.onclick = (e) => {
-        const stageKey = e.target.dataset.stage;
-        state.stages[stageKey].time = nowHM();
-        state.stages[stageKey].date = todayYMD();
-        saveState();
-        render();
-        state.openStage = stageKey;
-        saveState();
-      };
-    });
-
-    document.querySelectorAll('[data-extra-key]').forEach(inp => {
-      inp.onchange = (e) => {
-        const stageKey = e.target.dataset.stage;
-        const extraKey = e.target.dataset.extraKey;
-        state.stages[stageKey].extra[extraKey] = e.target.value;
-        saveState();
-      };
-    });
-  }
-
-  function upperAlnum(val) {
-    return val.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  }
-
-  function applyUpperAlnum(el, stateKey) {
-    el.addEventListener('input', () => {
-      const cur = el.selectionStart;
-      const clean = upperAlnum(el.value);
-      el.value = clean;
-      el.setSelectionRange(cur, cur);
-      state[stateKey] = clean;
-      saveState();
-    });
-  }
-
-  document.getElementById('driverName').oninput = (e) => { state.driverName = e.target.value; saveState(); };
-  applyUpperAlnum(document.getElementById('plateCavalo'), 'plateCavalo');
-  applyUpperAlnum(document.getElementById('plateReboque'), 'plateReboque');
-  applyUpperAlnum(document.getElementById('containerNum'), 'containerNum');
-  applyUpperAlnum(document.getElementById('refNum'), 'refNum');
-  document.getElementById('operMsg').oninput = (e) => { state.operMsg = e.target.value; saveState(); };
-
-  document.getElementById('searchBtn').onclick = () => {
-    const q = document.getElementById('searchQuery').value;
-    const results = searchHistory(q);
-    const container = document.getElementById('searchResults');
-    if (!q.trim()) {
-      container.innerHTML = '<div class="search-empty">Digite o número do contêiner ou referência para buscar.</div>';
-      return;
-    }
-    if (results.length === 0) {
-      container.innerHTML = '<div class="search-empty">Nenhuma operação encontrada.</div>';
-      return;
-    }
-    container.innerHTML = '';
-    results.forEach(entry => {
-      const div = document.createElement('div');
-      div.className = 'search-result-item';
-      const date = entry.savedAt ? new Date(entry.savedAt).toLocaleDateString('pt-BR') : '';
-      div.innerHTML = `
-        <div class="res-title">📦 ${entry.containerNum || '—'} &nbsp;·&nbsp; Ref: ${entry.refNum || '—'}</div>
-        <div class="res-sub">${entry.driverName || '—'} &nbsp;·&nbsp; ${entry.plateCavalo || '—'} / ${entry.plateReboque || '—'} &nbsp;·&nbsp; ${date}</div>
-      `;
-      div.onclick = () => applyHistoryEntry(entry);
-      container.appendChild(div);
+      cont.appendChild(div);
     });
   };
 
-  document.getElementById('searchQuery').onkeydown = (e) => {
-    if (e.key === 'Enter') document.getElementById('searchBtn').click();
-  };
-  document.getElementById('destEmail').oninput = (e) => { state.destEmail = e.target.value; saveState(); };
+  const sq=g('op-searchQuery');
+  if(sq) sq.onkeydown=(e)=>{ if(e.key==='Enter') g('op-searchBtn')?.click(); };
 
-  document.getElementById('resetLink').onclick = () => {
-    if (confirm('Tem certeza? Isso vai apagar todos os dados preenchidos (horários, contêiner, referência).')) {
-      localStorage.removeItem(STORAGE_KEY);
-      state = loadState();
-      STAGES.forEach(s => {
-        if (!state.stages[s.key]) state.stages[s.key] = { date: '', time: '', pending: false, sent: false, extra: {} };
-      });
-      render();
-      showToast('Dados limpos');
-    }
+  const rl=g('op-resetLink');
+  if(rl) rl.onclick=()=>{
+    if(!confirm('Apagar todos os dados da operação atual?')) return;
+    opState={ driverName:'',plateCavalo:'',plateReboque:'',containerNum:'',refNum:'',operMsg:'',destEmail:'',stages:opBlankStages(),openStage:null };
+    opSaveState(); opRender(); opShowToast('Dados limpos');
   };
 
-  function buildMessagePlain() {
-    const lines = [];
-    if (state.operMsg && state.operMsg.trim()) {
-      lines.push(state.operMsg.trim());
-      lines.push('');
+  const sf=g('op-btnSend');
+  if(sf) sf.onclick=opSendUpdate;
+}
+
+function opBuildMessagePlain(){
+  const lines=[];
+  if(opState.operMsg&&opState.operMsg.trim()){ lines.push(opState.operMsg.trim()); lines.push(''); }
+  lines.push('Motorista/Funcionário: '+(opState.driverName||'-'));
+  lines.push('Placa cavalo: '+(opState.plateCavalo||'-'));
+  lines.push('Placa reboque: '+(opState.plateReboque||'-'));
+  lines.push('Contêiner: '+(opState.containerNum||'-'));
+  lines.push('Referência: '+(opState.refNum||'-'));
+  lines.push('');
+  OP_STAGES.forEach(stageDef=>{
+    const st=opState.stages[stageDef.key];
+    if(st.pending){ lines.push(stageDef.label+': A confirmar'); }
+    else if(st.time&&st.date){
+      lines.push(stageDef.label+': '+opFmtDate(st.date)+' às '+st.time);
+      if(stageDef.extra) stageDef.extra.forEach(ex=>{ if(st.extra[ex.key]) lines.push('  '+ex.label+': '+st.extra[ex.key]); });
     }
-    lines.push('Motorista/Funcionário: ' + (state.driverName || '-'));
-    lines.push('Placa cavalo: ' + (state.plateCavalo || '-'));
-    lines.push('Placa reboque: ' + (state.plateReboque || '-'));
-    lines.push('Contêiner: ' + (state.containerNum || '-'));
-    lines.push('Referência: ' + (state.refNum || '-'));
-    lines.push('');
-    STAGES.forEach(stageDef => {
-      const st = state.stages[stageDef.key];
-      if (st.pending) {
-        lines.push(stageDef.label + ': A confirmar');
-      } else if (st.time && st.date) {
-        lines.push(stageDef.label + ': ' + formatDateBR(st.date) + ' às ' + st.time);
-        if (stageDef.extra) {
-          stageDef.extra.forEach(ex => {
-            if (st.extra[ex.key]) lines.push('  ' + ex.label + ': ' + st.extra[ex.key]);
-          });
-        }
-      }
-    });
-    return lines.join('\n');
+  });
+  return lines.join('\n');
+}
+
+function opBuildMessageHTML(){
+  const e=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const sty='font-family:Arial,sans-serif;font-size:12pt;line-height:1.15;color:#000000;';
+  const row=(label,value)=>`<tr><td style="padding:3px 0"><b>${label}:</b> ${e(value)}</td></tr>`;
+  let rows=row('Motorista/Funcionário',opState.driverName||'-')+row('Placa cavalo',opState.plateCavalo||'-')+row('Placa reboque',opState.plateReboque||'-')+row('Contêiner',opState.containerNum||'-')+row('Referência',opState.refNum||'-');
+  let stageRows='';
+  OP_STAGES.forEach(stageDef=>{
+    const st=opState.stages[stageDef.key];
+    if(st.pending){ stageRows+=row(stageDef.label,'A confirmar'); }
+    else if(st.time&&st.date){
+      stageRows+=row(stageDef.label,opFmtDate(st.date)+' às '+st.time);
+      if(stageDef.extra) stageDef.extra.forEach(ex=>{ if(st.extra[ex.key]) stageRows+=row(ex.label,st.extra[ex.key]); });
+    }
+  });
+  const msgBlock=(opState.operMsg&&opState.operMsg.trim())?`<p style="${sty}margin:0 0 14px 0;">${e(opState.operMsg.trim()).replace(/\n/g,'<br>')}</p>`:'';
+  return `<div style="${sty}">${msgBlock}<table style="border-collapse:collapse;${sty}">${rows}</table>${stageRows?`<br><table style="border-collapse:collapse;${sty}">${stageRows}</table>`:''}</div>`;
+}
+
+function opSendUpdate(){
+  const useEmail=document.getElementById('op-useEmail')?.checked;
+  const useWhats=document.getElementById('op-useWhats')?.checked;
+  const email=(opState.destEmail||'').trim();
+  if(!useEmail&&!useWhats){ opShowToast('Selecione ao menos um canal de envio'); return; }
+  if(useEmail&&!email){ opShowToast('Preencha o e-mail de destino'); document.getElementById('op-destEmail')?.focus(); return; }
+  const subject=`Atualização contêiner ${opState.containerNum||''} — Ref: ${opState.refNum||''}`;
+  if(useEmail){
+    const htmlBody=opBuildMessageHTML();
+    window.open(`https://webmail-seguro.com.br/?_task=mail&_action=compose&_to=${encodeURIComponent(email)}&_subject=${encodeURIComponent(subject)}&_body=${encodeURIComponent(htmlBody)}`,'_blank');
   }
+  if(useWhats){
+    const plainText=opBuildMessagePlain();
+    setTimeout(()=>{ window.location.href=`whatsapp://send?text=${encodeURIComponent(plainText)}`; },useEmail?400:0);
+  }
+  OP_STAGES.forEach(s=>{ opState.stages[s.key].sent=true; });
+  opSaveToHistory(); opSaveState(); opRender();
+  opShowToast('Enviado com sucesso!');
+}
 
-  function buildMessageHTML() {
-    const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const style = 'font-family:Arial,sans-serif;font-size:12pt;line-height:1.15;color:#000000;';
-    const row = (label, value) =>
-      `<tr><td style="padding:3px 0"><b>${label}:</b> ${esc(value)}</td></tr>`;
+// ── Render da aba ─────────────────────────────────────────────────────────────
+async function renderOperacaoTab(){
+  const body=document.getElementById('tab-body');
+  body.innerHTML='<div class="loading">Carregando operação…</div>';
+  await opLoadState();
 
-    let rows = '';
-    rows += row('Motorista/Funcionário', state.driverName || '-');
-    rows += row('Placa cavalo', state.plateCavalo || '-');
-    rows += row('Placa reboque', state.plateReboque || '-');
-    rows += row('Contêiner', state.containerNum || '-');
-    rows += row('Referência', state.refNum || '-');
+  body.innerHTML=`
+    <div class="op-module">
+      <div class="op-summary">
+        <span>Etapas concluídas: <b id="op-doneCount">0</b>/${OP_STAGES.length}</span>
+        <span id="op-clockNow" style="font-family:var(--mono);"></span>
+      </div>
 
-    let stageRows = '';
-    STAGES.forEach(stageDef => {
-      const st = state.stages[stageDef.key];
-      if (st.pending) {
-        stageRows += row(stageDef.label, 'A confirmar');
-      } else if (st.time && st.date) {
-        stageRows += row(stageDef.label, formatDateBR(st.date) + ' às ' + st.time);
-        if (stageDef.extra) {
-          stageDef.extra.forEach(ex => {
-            if (st.extra[ex.key]) {
-              stageRows += row(ex.label, st.extra[ex.key]);
-            }
-          });
-        }
-      }
-    });
+      <div class="op-card">
+        <p class="op-card-title">Mensagem / Observações da operação</p>
+        <div class="op-field"><textarea id="op-operMsg" rows="3" placeholder="Ex: Boa tarde, segue as datas e horários da operação..."></textarea></div>
+      </div>
 
-    const msgBlock = (state.operMsg && state.operMsg.trim())
-      ? `<p style="${style}margin:0 0 14px 0;">${esc(state.operMsg.trim()).replace(/\n/g,'<br>')}</p>`
-      : '';
+      <div class="op-card">
+        <p class="op-card-title">Buscar operação anterior</p>
+        <div class="op-search-row">
+          <input type="text" id="op-searchQuery" placeholder="Nº do contêiner ou referência…" autocomplete="off">
+          <button type="button" id="op-searchBtn">Buscar</button>
+        </div>
+        <div id="op-searchResults"></div>
+      </div>
 
-    return `<div style="${style}">
-      ${msgBlock}
-      <table style="border-collapse:collapse;${style}">
-        ${rows}
-      </table>
-      ${stageRows ? `<br><table style="border-collapse:collapse;${style}">${stageRows}</table>` : ''}
+      <div class="op-card">
+        <p class="op-card-title">Dados da operação</p>
+        <div class="op-field"><label>Nome do motorista / funcionário</label><input type="text" id="op-driverName" placeholder="Ex: João Silva" autocomplete="off"></div>
+        <div class="op-row2">
+          <div class="op-field"><label>Placa do cavalo</label><input type="text" id="op-plateCavalo" placeholder="ABC1D23" autocomplete="off"></div>
+          <div class="op-field"><label>Placa do reboque</label><input type="text" id="op-plateReboque" placeholder="XYZ9E87" autocomplete="off"></div>
+        </div>
+        <div class="op-row2">
+          <div class="op-field"><label>Nº do contêiner</label><input type="text" id="op-containerNum" placeholder="ABCU1234567" autocomplete="off"></div>
+          <div class="op-field"><label>Referência</label><input type="text" id="op-refNum" placeholder="Ex: 88421" autocomplete="off"></div>
+        </div>
+      </div>
+
+      <div id="op-stagesContainer"></div>
+
+      <div class="op-card">
+        <p class="op-card-title">Enviar via</p>
+        <div class="op-channel">
+          <label class="op-channel-check"><input type="checkbox" id="op-useEmail" checked>&nbsp;📧 E-mail</label>
+          <input type="email" id="op-destEmail" class="op-channel-input" placeholder="cliente@empresa.com">
+          <div class="op-hint">O e-mail fica salvo para os próximos envios.</div>
+        </div>
+        <div class="op-channel">
+          <label class="op-channel-check"><input type="checkbox" id="op-useWhats" checked>&nbsp;💬 WhatsApp</label>
+          <div class="op-hint">Abre o WhatsApp Web — você escolhe a conversa.</div>
+        </div>
+      </div>
+
+      <button type="button" class="op-btn-send" id="op-btnSend">Enviar atualização</button>
+      <div class="op-reset" id="op-resetLink">Limpar todos os dados e começar de novo</div>
+      <div class="op-toast" id="op-toast"></div>
+    </div>`;
+
+  opRender();
+  opAttachGeneralEvents();
+
+  const clk=document.getElementById('op-clockNow');
+  if(clk) clk.textContent=opNowHM();
+  if(opClockTimer) clearInterval(opClockTimer);
+  opClockTimer=setInterval(()=>{
+    const el=document.getElementById('op-clockNow');
+    if(el) el.textContent=opNowHM(); else clearInterval(opClockTimer);
+  },30000);
+}
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Telas de segurança ───────────────────────────────────────────────────────
+function renderSetupScreen(){
+  document.getElementById('app').innerHTML=`
+    <div class="sec-screen">
+      <div class="sec-box">
+        <div class="sec-icon">🔐</div>
+        <p class="sec-title">Criar senha de acesso</p>
+        <p class="sec-sub">Protege os dados da frota no seu dispositivo.<br>Cada membro da equipe define a própria senha.</p>
+        <input class="sec-input" type="password" id="pwd-new" placeholder="Nova senha (mín. 4 caracteres)"
+          onkeydown="if(event.key==='Enter') document.getElementById('pwd-confirm').focus()">
+        <input class="sec-input" type="password" id="pwd-confirm" placeholder="Confirmar senha"
+          onkeydown="if(event.key==='Enter') App.trySetup()">
+        <div id="pwd-error" class="sec-error"></div>
+        <button id="pwd-btn" class="sec-btn" onclick="App.trySetup()">Criar senha</button>
+        <span class="sec-hint">Esta senha é salva apenas no seu navegador.</span>
+      </div>
+    </div>`;
+  setTimeout(()=>document.getElementById('pwd-new')?.focus(),100);
+}
+
+function renderLockScreen(){
+  document.getElementById('app').innerHTML=`
+    <div class="sec-screen">
+      <div class="sec-box">
+        <div class="sec-icon">🔒</div>
+        <p class="sec-title">Armesa</p><p style="font-family:var(--mono);font-size:.75rem;color:var(--muted);margin:0 0 .2rem;">Logística e Transporte</p>
+        <p class="sec-sub">cadastro compartilhado</p>
+        <input class="sec-input" type="password" id="pwd-input" placeholder="Senha de acesso"
+          onkeydown="if(event.key==='Enter') App.tryUnlock()">
+        <div id="pwd-error" class="sec-error"></div>
+        <button id="pwd-btn" class="sec-btn" onclick="App.tryUnlock()">Entrar</button>
+        <a class="sec-link" onclick="App.showReset()">Esqueceu a senha? Redefinir</a>
+      </div>
+    </div>`;
+  setTimeout(()=>document.getElementById('pwd-input')?.focus(),100);
+}
+
+// ─── Render principal ─────────────────────────────────────────────────────────
+function render(){
+  if(isSetup)  { renderSetupScreen(); return; }
+  if(isLocked) { renderLockScreen();  return; }
+  const app=document.getElementById('app');
+  let alertCNH=0, alertCRLV=0;
+  motoristas.forEach(r=>{ const s=cnhStatus(r.cnhVencimento); if(s.d!==null&&s.d<=60) alertCNH++; });
+  veiculos.forEach(v=>{ const s=crlvStatus(v.crlvVencimento); if(s.d!==null&&s.d<=60) alertCRLV++; });
+  const totalAlerts=alertCNH+alertCRLV;
+
+  const diagBanner=lastLoadError
+    ?`<div style="background:#F8E1DC;border:1px solid var(--danger);color:#7A2A1C;border-radius:10px;padding:.85rem 1.1rem;margin:1rem 2rem 0;font-family:var(--mono);font-size:.78rem;"><b style="display:block;margin-bottom:.3rem;">&#x26A0; Erro ao carregar dados</b>${esc(lastLoadError)}<br><button class="btn" style="margin-top:.5rem;" onclick="App.recarregarDados()">Recarregar dados</button></div>`
+    :loadErrors.length
+    ?`<div style="background:#FBEFD2;border:1px solid var(--warn);color:#704C09;border-radius:10px;padding:.75rem 1.1rem;margin:1rem 2rem 0;font-family:var(--mono);font-size:.75rem;"><b style="display:block;margin-bottom:.25rem;">&#x26A0; ${loadErrors.length} registro(s) nao carregaram</b>Chaves: ${loadErrors.map(k=>esc(k.replace(M_PREFIX,'').replace(V_PREFIX,''))).join(', ')}<br><button class="btn" style="margin-top:.4rem;" onclick="App.recarregarDados()">Tentar novamente</button></div>`
+    :'';
+
+  const alertTabLabel=totalAlerts>0?`⚠ Alertas (${totalAlerts})`:`⚠ Alertas`;
+
+  app.innerHTML=`
+    <div class="topbar">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <div>
+          <div class="brand">
+            <span class="brand-mark">Armesa</span>
+            <span class="brand-mark" style="font-weight:500;opacity:.75;">Logística e Transporte</span>
+          </div>
+          <div class="brand-sub" style="margin-top:.35rem;">
+            ${activeTab==='operacao'?'📦 Acompanhamento de Operação':activeTab==='motoristas'?'👤 Gestão de Motoristas':activeTab==='veiculos'?'🚛 Gestão de Veículos':'⚠ Alertas do Sistema'}
+          </div>
+        </div>
+        <div class="topbar-sec">
+          <button class="topbar-btn ${privacyMode?'active':''}" onclick="App.togglePrivacy()" title="${privacyMode?'Mostrar dados sensíveis':'Ocultar dados sensíveis'}">${privacyMode?'🙈':'👁'}</button>
+          <button class="topbar-btn" onclick="App.changePassword()" title="Mudar senha">🔑</button>
+          <button class="topbar-btn" onclick="App.lockApp()" title="Bloquear">🔒</button>
+        </div>
+      </div>
+      <div class="stats" style="margin-top:1rem;">
+        <div class="stat"><b>${motoristas.length}</b>motoristas</div>
+        <div class="stat"><b>${veiculos.length}</b>veículos</div>
+        <div class="stat ${alertCNH>0?'alert':''}"><b>${alertCNH}</b>CNH a vencer</div>
+        ${alertCRLV>0?`<div class="stat alert"><b>${alertCRLV}</b>CRLV a vencer</div>`:''}
+        ${opState.containerNum?`<div class="stat"><b style="font-size:.9rem;">📦</b>${opState.containerNum}</div>`:''}
+      </div>
+    </div>
+    ${diagBanner}
+    <div class="tabs">
+      <button class="tab ${activeTab==='operacao'?'active':''}" onclick="App.setTab('operacao')">📦 Operação</button>
+      <button class="tab ${activeTab==='motoristas'?'active':''}" onclick="App.setTab('motoristas')">Motoristas</button>
+      <button class="tab ${activeTab==='veiculos'?'active':''}" onclick="App.setTab('veiculos')">Veículos</button>
+      <button class="tab tab-alert ${activeTab==='alertas'?'active':''}" onclick="App.setTab('alertas')">${alertTabLabel}</button>
+    </div>
+    <div id="tab-body"></div>
+    <div id="modal-slot"></div>
+  `;
+
+  if(activeTab==='motoristas') renderMotoristasTab();
+  else if(activeTab==='veiculos') renderVeiculosTab();
+  else if(activeTab==='alertas') renderAlertasTab();
+  else renderOperacaoTab();
+  if(editingMotoristaId!==null) renderMotoristaModal();
+  if(editingVeiculoId!==null) renderVeiculoModal();
+}
+
+// ─── Aba Motoristas ───────────────────────────────────────────────────────────
+function sortMotoristas(list){
+  return [...list].sort((a,b)=>{
+    if(sortM==='cnhVencimento'){
+      const da=a.cnhVencimento||'9999', db=b.cnhVencimento||'9999';
+      return da.localeCompare(db);
+    }
+    if(sortM==='dataNascimento'){
+      const da=a.dataNascimento||'9999', db=b.dataNascimento||'9999';
+      return da.localeCompare(db);
+    }
+    if(sortM==='situacao'){
+      const order={ativo:0,afastado:1,desligado:2};
+      return (order[a.situacao||'ativo']||0)-(order[b.situacao||'ativo']||0);
+    }
+    return (a.nome||'').localeCompare(b.nome||'');
+  });
+}
+
+function renderMotoristasTab(){
+  const body=document.getElementById('tab-body');
+  const totais={all:0,ativo:0,afastado:0,desligado:0};
+  motoristas.forEach(r=>{ totais.all++; const s=r.situacao||'ativo'; totais[s]=(totais[s]||0)+1; });
+
+  let filtered=motoristas.filter(r=>{
+    if(activeFilter==='alert'){ const s=cnhStatus(r.cnhVencimento); if(s.d===null||s.d>60) return false; }
+    else if(activeFilter==='semveiculo'){ if(veiculos.some(v=>v.motoristaAtualId===r.id)) return false; }
+    else if(activeFilter!=='all'){ if((r.situacao||'ativo')!==activeFilter) return false; }
+    if(!searchTerm) return true;
+    const t=searchTerm.toLowerCase();
+    return [r.nome,r.cpf,r.cnhNumero,r.telefone,r.antt,r.rg].some(v=>(v||'').toLowerCase().includes(t));
+  });
+
+  filtered=sortMotoristas(filtered);
+  const total=filtered.length;
+  const showing=filtered.slice(0,currentPage*PAGE_SIZE);
+  const hasMore=total>showing.length;
+
+  const cards=showing.map(r=>{
+    const s=cnhStatus(r.cnhVencimento);
+    const sit=r.situacao||'ativo';
+    const age=calcAge(r.dataNascimento);
+    const assigned=veiculos.filter(v=>v.motoristaAtualId===r.id);
+    const cardCls=sit==='desligado'?'driver-desligado':sit==='afastado'?'driver-afastado':s.cls;
+    return `<div class="card ${cardCls}" onclick="App.openEditMotorista('${r.id}')">
+      <div class="card-head">
+        <div>
+          <p class="item-name">${esc(r.nome||'Sem nome')}${age?` <span style="font-size:.72rem;color:var(--muted);font-weight:400;">${age}a</span>`:''}
+          </p>
+          <p class="item-sub">CPF ${maskVal(r.cpf||'—')}</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end;">
+          <span class="pill ${s.cls||''}">${s.label}</span>
+          ${sit!=='ativo'?`<span class="pill s-${sit}">${SITUACAO_LABELS[sit]}</span>`:''}
+        </div>
+      </div>
+      <div class="card-meta" style="margin-top:.8rem;">
+        <span><b>CNH</b> ${maskVal(r.cnhNumero||'—')}${r.cnhCategoria?' · Cat. '+esc(r.cnhCategoria):''} · vence ${fmtDate(r.cnhVencimento)}</span>
+        ${r.dataNascimento?`<span><b>Nasc.</b> ${fmtDate(r.dataNascimento)}</span>`:''}
+        <span><b>Tel</b> ${esc(r.telefone||'—')}</span>
+        ${r.antt?`<span><b>ANTT</b> ${maskVal(r.antt)}</span>`:''}
+        ${assigned.length
+          ?formatAssigned(assigned).map(p=>`<span><b>${p.label}</b> <a href="#" onclick="event.stopPropagation();App.goToVeiculosOf('${esc(r.nome)}');return false;" style="color:var(--accent-dark);">${esc(formatPlaca(p.placa))}</a></span>`).join('')
+          :`<span><b>Veículo atual</b> nenhum vinculado</span>`}
+        ${r.observacoes?`<span class="obs-tag">📝 ${esc(r.observacoes.slice(0,60))}${r.observacoes.length>60?'…':''}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML=`
+    <div class="controls">
+      <div class="search-wrap"><i class="search-icon">⌕</i>
+        <input id="search" type="text" placeholder="Buscar por nome, CPF, CNH, RG, ANTT ou telefone" value="${esc(searchTerm)}">
+      </div>
+      <select class="sort-select" onchange="App.setSortM(this.value)">
+        <option value="nome" ${sortM==='nome'?'selected':''}>Nome A-Z</option>
+        <option value="cnhVencimento" ${sortM==='cnhVencimento'?'selected':''}>CNH: mais próxima</option>
+        <option value="dataNascimento" ${sortM==='dataNascimento'?'selected':''}>Nascimento</option>
+        <option value="situacao" ${sortM==='situacao'?'selected':''}>Situação</option>
+      </select>
+      <button class="btn icon-btn" title="Exportar CSV" onclick="App.exportCSV('motoristas')">⬇ CSV</button>
+      <button class="btn primary" onclick="App.openNewMotorista()">+ Novo motorista</button>
+    </div>
+    <div class="filter-row">
+      <button class="chip ${activeFilter==='all'?'active':''}" onclick="App.setFilter('all')">Todos (${totais.all})</button>
+      <button class="chip ${activeFilter==='ativo'?'active':''}" onclick="App.setFilter('ativo')">Ativos (${totais.ativo||0})</button>
+      <button class="chip ${activeFilter==='afastado'?'active':''}" onclick="App.setFilter('afastado')">Afastados (${totais.afastado||0})</button>
+      <button class="chip ${activeFilter==='desligado'?'active':''}" onclick="App.setFilter('desligado')">Desligados (${totais.desligado||0})</button>
+      <button class="chip ${activeFilter==='alert'?'active':''}" onclick="App.setFilter('alert')">CNH a vencer</button>
+      <button class="chip ${activeFilter==='semveiculo'?'active':''}" onclick="App.setFilter('semveiculo')">Sem veículo</button>
+    </div>
+    ${filtered.length
+      ?`<div class="grid">${cards}</div>${hasMore?`<div class="load-more"><button class="btn" onclick="App.loadMore()">Mostrar mais ${total-showing.length} de ${total}</button></div>`:''}`
+      :`<div class="empty"><i>Nenhum motorista encontrado</i>Tente outro termo.</div>`}
+  `;
+  const el=document.getElementById('search');
+  el.addEventListener('input',e=>{
+    clearTimeout(searchDebounceTimer);
+    const val=e.target.value;
+    searchDebounceTimer=setTimeout(()=>{
+      searchTerm=val; currentPage=1; render();
+      const v=document.getElementById('search'); if(v){ v.focus(); v.selectionStart=v.selectionEnd=v.value.length; }
+    },200);
+  });
+}
+
+// ─── Aba Veículos ─────────────────────────────────────────────────────────────
+function sortVeiculosFn(list){
+  return [...list].sort((a,b)=>{
+    if(sortV==='marcaModelo') return (a.marcaModelo||'').localeCompare(b.marcaModelo||'');
+    if(sortV==='ano') return parseInt(b.ano||0)-parseInt(a.ano||0);
+    if(sortV==='crlvVencimento'){ const da=a.crlvVencimento||'9999', db=b.crlvVencimento||'9999'; return da.localeCompare(db); }
+    return formatPlaca(a.placa||'').localeCompare(formatPlaca(b.placa||''));
+  });
+}
+
+function renderVeiculosTab(){
+  const body=document.getElementById('tab-body');
+  const counts={all:veiculos.length,cavalo:0,reboque:0,semireboque:0,caminhao:0,semMotorista:0};
+  veiculos.forEach(v=>{ counts[v.tipo]=(counts[v.tipo]||0)+1; if(!v.motoristaAtualId) counts.semMotorista++; });
+
+  let filtered=veiculos.filter(r=>{
+    if(activeFilter==='semMotorista'){ if(r.motoristaAtualId) return false; }
+    else if(activeFilter!=='all'){ if(r.tipo!==activeFilter) return false; }
+    if(!searchTerm) return true;
+    const t=searchTerm.toLowerCase();
+    const driver=motoristas.find(m=>m.id===r.motoristaAtualId);
+    return [r.placa,r.marcaModelo,r.proprietario,r.proprietarioDoc,r.renavam,r.antt,r.anttNome,r.anttDoc,driver?driver.nome:''].some(v=>(v||'').toLowerCase().includes(t));
+  });
+
+  filtered=sortVeiculosFn(filtered);
+  const total=filtered.length;
+  const showing=filtered.slice(0,currentPage*PAGE_SIZE);
+  const hasMore=total>showing.length;
+
+  const cards=showing.map(r=>{
+    const driver=motoristas.find(m=>m.id===r.motoristaAtualId);
+    const cs=crlvStatus(r.crlvVencimento);
+    return `<div class="card neutral ${cs.cls}" onclick="App.openEditVeiculo('${r.id}')">
+      <div class="card-head">
+        <span class="pill type">${TIPO_LABELS[r.tipo]||r.tipo||'—'}</span>
+        ${driver?`<span class="pill">${esc(driver.nome)}</span>`:`<span class="pill unassigned">sem motorista</span>`}
+      </div>
+      <div class="plate"><div class="plate-top">${(TIPO_LABELS[r.tipo]||'VEÍCULO').toUpperCase()}</div><div class="plate-body">${esc(formatPlaca(r.placa)||'—')}</div></div>
+      <p class="item-name" style="font-size:.92rem;">${esc(r.marcaModelo||'—')}</p>
+      <div class="card-meta" style="margin-top:.5rem;">
+        <span><b>Renavam</b> ${esc(r.renavam||'—')}</span>
+        <span><b>Exercício</b> ${esc(r.exercicio||'—')}${r.crlvVencimento?` · vence ${fmtDate(r.crlvVencimento)}`:''}</span>
+        <span><b>Proprietário</b> ${esc(r.proprietario||'—')}</span>
+        ${r.antt?`<span><b>ANTT</b> ${esc(r.antt)}${r.anttNome?' · '+esc(r.anttNome):''}</span>`:''}
+        ${cs.label?`<span style="color:${cs.cls==='status-danger'?'var(--danger)':'var(--warn)'};">⚠ ${cs.label}</span>`:''}
+        ${r.observacoes?`<span class="obs-tag">📝 ${esc(r.observacoes.slice(0,60))}${r.observacoes.length>60?'…':''}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML=`
+    <div class="controls">
+      <div class="search-wrap"><i class="search-icon">⌕</i>
+        <input id="search" type="text" placeholder="Buscar por placa, modelo, renavam, proprietário, CPF/CNPJ, ANTT ou motorista" value="${esc(searchTerm)}">
+      </div>
+      <select class="sort-select" onchange="App.setSortV(this.value)">
+        <option value="placa" ${sortV==='placa'?'selected':''}>Placa A-Z</option>
+        <option value="marcaModelo" ${sortV==='marcaModelo'?'selected':''}>Modelo A-Z</option>
+        <option value="ano" ${sortV==='ano'?'selected':''}>Mais novo</option>
+        <option value="crlvVencimento" ${sortV==='crlvVencimento'?'selected':''}>CRLV: mais próximo</option>
+      </select>
+      <button class="btn icon-btn" title="Exportar CSV" onclick="App.exportCSV('veiculos')">⬇ CSV</button>
+      <button class="btn primary" onclick="App.openNewVeiculo()">+ Novo veículo</button>
+    </div>
+    <div class="filter-row">
+      <button class="chip ${activeFilter==='all'?'active':''}" onclick="App.setFilter('all')">Todos (${counts.all})</button>
+      <button class="chip ${activeFilter==='cavalo'?'active':''}" onclick="App.setFilter('cavalo')">Cavalo (${counts.cavalo})</button>
+      <button class="chip ${activeFilter==='reboque'?'active':''}" onclick="App.setFilter('reboque')">Reboque (${counts.reboque||0})</button>
+      <button class="chip ${activeFilter==='semireboque'?'active':''}" onclick="App.setFilter('semireboque')">Semi-reboque (${counts.semireboque||0})</button>
+      <button class="chip ${activeFilter==='caminhao'?'active':''}" onclick="App.setFilter('caminhao')">Caminhão (${counts.caminhao||0})</button>
+      <button class="chip ${activeFilter==='semMotorista'?'active':''}" onclick="App.setFilter('semMotorista')">Sem motorista (${counts.semMotorista})</button>
+    </div>
+    ${filtered.length
+      ?`<div class="grid">${cards}</div>${hasMore?`<div class="load-more"><button class="btn" onclick="App.loadMore()">Mostrar mais ${total-showing.length} de ${total}</button></div>`:''}`
+      :`<div class="empty"><i>Nenhum veículo encontrado</i>Tente outro termo.</div>`}
+  `;
+  const el=document.getElementById('search');
+  el.addEventListener('input',e=>{
+    clearTimeout(searchDebounceTimer);
+    const val=e.target.value;
+    searchDebounceTimer=setTimeout(()=>{
+      searchTerm=val; currentPage=1; render();
+      const v=document.getElementById('search'); if(v){ v.focus(); v.selectionStart=v.selectionEnd=v.value.length; }
+    },200);
+  });
+}
+
+// ─── Aba Alertas ──────────────────────────────────────────────────────────────
+function renderAlertasTab(){
+  const body=document.getElementById('tab-body');
+
+  const cnhVencidas      = motoristas.filter(r=>{ const s=cnhStatus(r.cnhVencimento); return s.d!==null&&s.d<0; }).sort((a,b)=>a.cnhVencimento.localeCompare(b.cnhVencimento));
+  const cnh30            = motoristas.filter(r=>{ const s=cnhStatus(r.cnhVencimento); return s.d!==null&&s.d>=0&&s.d<=30; }).sort((a,b)=>a.cnhVencimento.localeCompare(b.cnhVencimento));
+  const cnh60            = motoristas.filter(r=>{ const s=cnhStatus(r.cnhVencimento); return s.d!==null&&s.d>30&&s.d<=60; }).sort((a,b)=>a.cnhVencimento.localeCompare(b.cnhVencimento));
+  const crlvAlert        = veiculos.filter(v=>{ const s=crlvStatus(v.crlvVencimento); return s.d!==null&&s.d<=60; }).sort((a,b)=>(a.crlvVencimento||'').localeCompare(b.crlvVencimento||''));
+  const semMotorista     = veiculos.filter(v=>!v.motoristaAtualId);
+
+  function mRow(r, dotColor, badgeColor, badgeText){
+    const age=calcAge(r.dataNascimento);
+    return `<div class="alert-row" onclick="App.openEditMotorista('${r.id}')">
+      <div class="alert-dot ${dotColor}"></div>
+      <div class="alert-name">${esc(r.nome)}${age?` <span style="font-size:.7rem;color:var(--muted);font-weight:400;">${age}a</span>`:''}</div>
+      <div class="alert-detail">CNH ${esc(r.cnhNumero||'—')}</div>
+      <span class="alert-badge ${badgeColor}">${badgeText}</span>
     </div>`;
   }
 
-  function sendUpdate() {
-    const useEmail = document.getElementById('useEmail').checked;
-    const useWhats = document.getElementById('useWhats').checked;
-    const email = state.destEmail.trim();
-
-    if (!useEmail && !useWhats) {
-      showToast('Selecione ao menos um canal de envio');
-      return;
-    }
-
-    if (useEmail && !email) {
-      showToast('Preencha o e-mail de destino');
-      document.getElementById('destEmail').focus();
-      return;
-    }
-
-    const subject = `Atualização contêiner ${state.containerNum || ''} — Ref: ${state.refNum || ''}`;
-
-    if (useEmail) {
-      const htmlBody = buildMessageHTML();
-      const webmailUrl = `https://webmail-seguro.com.br/?_task=mail&_action=compose&_to=${encodeURIComponent(email)}&_subject=${encodeURIComponent(subject)}&_body=${encodeURIComponent(htmlBody)}`;
-      window.open(webmailUrl, '_blank');
-    }
-
-    if (useWhats) {
-      const plainText = buildMessagePlain();
-      // whatsapp:// abre o app instalado no computador ou celular
-      const waUrl = `whatsapp://send?text=${encodeURIComponent(plainText)}`;
-      setTimeout(() => { window.location.href = waUrl; }, useEmail ? 400 : 0);
-    }
-
-    STAGES.forEach(s => { state.stages[s.key].sent = true; });
-    saveToHistory();
-    saveState();
-    render();
-    showToast('Enviado com sucesso!');
+  function vRow(v, dotColor, badgeColor, badgeText){
+    return `<div class="alert-row" onclick="App.openEditVeiculo('${v.id}')">
+      <div class="alert-dot ${dotColor}"></div>
+      <div class="alert-name">${esc(formatPlaca(v.placa))}</div>
+      <div class="alert-detail">${esc(v.marcaModelo||'—')}</div>
+      <span class="alert-badge ${badgeColor}">${badgeText}</span>
+    </div>`;
   }
 
-  document.getElementById('btnSendFinal').onclick = sendUpdate;
+  const total=cnhVencidas.length+cnh30.length+cnh60.length+crlvAlert.length+semMotorista.length;
 
-  render();
+  if(total===0){
+    body.innerHTML=`<div class="empty" style="margin-top:3rem;"><i>✅ Tudo em ordem!</i>Nenhum alerta no momento.</div>`;
+    return;
+  }
+
+  let html='';
+
+  if(cnhVencidas.length){
+    html+=`<div class="alert-section"><p class="alert-section-title red">🔴 CNH Vencida (${cnhVencidas.length})</p>`;
+    cnhVencidas.forEach(r=>{ const s=cnhStatus(r.cnhVencimento); html+=mRow(r,'red','red',s.label); });
+    html+='</div>';
+  }
+  if(cnh30.length){
+    html+=`<div class="alert-section"><p class="alert-section-title red">🔴 CNH vence em até 30 dias (${cnh30.length})</p>`;
+    cnh30.forEach(r=>{ const s=cnhStatus(r.cnhVencimento); html+=mRow(r,'red','red',s.label); });
+    html+='</div>';
+  }
+  if(cnh60.length){
+    html+=`<div class="alert-section"><p class="alert-section-title orange">🟡 CNH vence em 31–60 dias (${cnh60.length})</p>`;
+    cnh60.forEach(r=>{ const s=cnhStatus(r.cnhVencimento); html+=mRow(r,'orange','orange',s.label); });
+    html+='</div>';
+  }
+  if(crlvAlert.length){
+    html+=`<div class="alert-section"><p class="alert-section-title ${crlvAlert.some(v=>crlvStatus(v.crlvVencimento).d<=30)?'red':'orange'}">📄 CRLV a vencer (${crlvAlert.length})</p>`;
+    crlvAlert.forEach(v=>{ const s=crlvStatus(v.crlvVencimento); html+=vRow(v,s.d<=30?'red':'orange',s.d<=30?'red':'orange',s.label); });
+    html+='</div>';
+  }
+  if(semMotorista.length){
+    html+=`<div class="alert-section"><p class="alert-section-title">🚛 Veículos sem motorista (${semMotorista.length})</p>`;
+    semMotorista.forEach(v=>{ html+=vRow(v,'gray','','sem motorista'); });
+    html+='</div>';
+  }
+
+  body.innerHTML=html+'<div style="height:2rem;"></div>';
+}
+
+// ─── Modal Motorista ──────────────────────────────────────────────────────────
+function renderMotoristaModal(){
+  const isNew=editingMotoristaId==='new';
+  const rec=isNew?blankMotorista():(motoristas.find(r=>r.id===editingMotoristaId)||blankMotorista());
+  const locked=!isNew&&!motoristaUnlocked;
+
+  const inputs=motoristaFields().map(([key,label,mono,type])=>{
+    const full=type==='full', isDate=type==='date', isTextarea=type==='textarea';
+    const isSituacao=type==='situacao', isCategoria=type==='categoria';
+    if(isSituacao){
+      const opts=['ativo','afastado','desligado'].map(v=>`<option value="${v}" ${(rec.situacao||'ativo')===v?'selected':''}>${SITUACAO_LABELS[v]}</option>`).join('');
+      return `<div class="field"><label for="f-${key}">${label}</label><select id="f-${key}" data-key="${key}" ${locked?'disabled':''}>${opts}</select></div>`;
+    }
+    if(isCategoria){
+      const opts=CNH_CATEGORIAS.map(c=>`<option value="${c}" ${rec.cnhCategoria===c?'selected':''}>${c}</option>`).join('');
+      return `<div class="field"><label for="f-${key}">${label}</label><select id="f-${key}" data-key="${key}" ${locked?'disabled':''}><option value="">—</option>${opts}</select></div>`;
+    }
+    if(isTextarea){
+      return `<div class="field" style="grid-column:1/-1"><label for="f-${key}">${label}</label><textarea id="f-${key}" data-key="${key}" ${locked?'disabled':''}>${esc(rec[key]||'')}</textarea></div>`;
+    }
+    return `<div class="field" ${full?'style="grid-column:1/-1"':''}><label for="f-${key}">${label}</label><input id="f-${key}" data-key="${key}" data-mono="${mono?1:0}" type="${isDate?'date':'text'}" value="${esc(rec[key]||'')}" ${locked?'disabled':''}></div>`;
+  }).join('');
+
+  const assigned=veiculos.filter(v=>v.motoristaAtualId===rec.id);
+  const veiculosSection=!isNew&&assigned.length?`
+    <div class="section-label">Veículos vinculados (${assigned.length})</div>
+    <div style="display:flex;flex-direction:column;gap:.4rem;">
+      ${assigned.map(v=>`<div class="veiculo-row" onclick="App.closeMotoristaModal();App.openEditVeiculo('${v.id}')"><span class="pill type" style="font-size:.66rem;">${esc(TIPO_LABELS[v.tipo]||v.tipo)}</span><span style="font-family:var(--mono);font-size:.8rem;font-weight:500;">${esc(formatPlaca(v.placa))}</span><span style="font-size:.8rem;color:var(--muted);flex:1;">${esc(v.marcaModelo||'')}</span><span style="font-size:.75rem;color:var(--muted);">→</span></div>`).join('')}
+    </div>`:'';
+
+  const actions=locked
+    ?`<span></span><button class="btn primary" onclick="App.unlockMotorista()">Editar</button>`
+    :`${isNew?'<span></span>':`<button class="btn ghost" onclick="App.confirmDeleteMotorista('${rec.id}')">Excluir motorista</button>`}
+      <div style="display:flex;gap:.6rem;"><button class="btn" onclick="App.closeMotoristaModal()">Cancelar</button><button id="btn-salvar-motorista" class="btn primary" onclick="App.submitMotorista('${rec.id}',${isNew})">Salvar</button></div>`;
+
+  const age=calcAge(rec.dataNascimento);
+  document.getElementById('modal-slot').innerHTML+=`
+    <div class="modal-bg" onclick="if(event.target===this)App.closeMotoristaModal()">
+      <div class="modal" id="modal-motorista">
+        <button class="modal-close" onclick="App.closeMotoristaModal()" aria-label="Fechar">×</button>
+        <h2>${isNew?'Novo motorista':esc(rec.nome||'Editar motorista')}${age&&!isNew?` <span style="font-size:.85rem;color:var(--muted);font-weight:400;">${age} anos</span>`:''}</h2>
+        <p class="sub">${locked?'Visualizando · clique em Editar para alterar':'Dados do motorista'}</p>
+        <div class="section-label">Motorista</div>
+        <div class="fgrid">${inputs}</div>
+        ${veiculosSection}
+        <div class="modal-actions">${actions}</div>
+      </div>
+    </div>`;
+}
+
+// ─── Modal Veículo ────────────────────────────────────────────────────────────
+function renderVeiculoModal(){
+  const isNew=editingVeiculoId==='new';
+  const rec=isNew?blankVeiculo():(veiculos.find(r=>r.id===editingVeiculoId)||blankVeiculo());
+  const locked=!isNew&&!veiculoUnlocked;
+
+  const inputs=veiculoFields().map(([key,label,mono,type])=>{
+    const full=type==='full', isPlaca=type==='placa', isTextarea=type==='textarea', isDate=type==='date';
+    const val=isPlaca?formatPlaca(rec[key]||''):(rec[key]||'');
+    if(isTextarea){
+      return `<div class="field" style="grid-column:1/-1"><label for="f-${key}">${label}</label><textarea id="f-${key}" data-key="${key}" ${locked?'disabled':''}>${esc(val)}</textarea></div>`;
+    }
+    return `<div class="field" ${full?'style="grid-column:1/-1"':''}><label for="f-${key}">${label}</label><input id="f-${key}" data-key="${key}" data-mono="${mono?1:0}" type="${isDate?'date':'text'}" value="${esc(val)}" ${locked?'disabled':''} ${isPlaca&&!locked?'oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,\'\')"':''}></div>`;
+  }).join('');
+
+  const motoristaOptions=`<option value="">Nenhum (sem vínculo)</option>`+motoristas.map(m=>`<option value="${m.id}" ${rec.motoristaAtualId===m.id?'selected':''}>${esc(m.nome)}</option>`).join('');
+
+  const hist=rec.historicoMotoristas||[];
+  const histSection=hist.length?`
+    <div class="section-label">Histórico de motoristas (${hist.length})</div>
+    <div>${hist.slice().reverse().map(h=>`<div class="history-item"><span>${esc(h.nome)}</span><span style="color:var(--muted);font-family:var(--mono);font-size:.72rem;">Saiu em ${fmtDate(h.dataDesvinculo)}</span></div>`).join('')}</div>`:'';
+
+  const actions=locked
+    ?`<span></span><button class="btn primary" onclick="App.unlockVeiculo()">Editar</button>`
+    :`${isNew?'<span></span>':`<button class="btn ghost" onclick="App.confirmDeleteVeiculo('${rec.id}')">Excluir veículo</button>`}
+      <div style="display:flex;gap:.6rem;"><button class="btn" onclick="App.closeVeiculoModal()">Cancelar</button><button id="btn-salvar-veiculo" class="btn primary" onclick="App.submitVeiculo('${rec.id}',${isNew})">Salvar</button></div>`;
+
+  document.getElementById('modal-slot').innerHTML+=`
+    <div class="modal-bg" onclick="if(event.target===this)App.closeVeiculoModal()">
+      <div class="modal" id="modal-veiculo">
+        <button class="modal-close" onclick="App.closeVeiculoModal()" aria-label="Fechar">×</button>
+        <h2>${isNew?'Novo veículo':esc(formatPlaca(rec.placa)||'Editar veículo')}</h2>
+        <p class="sub">${locked?'Visualizando · clique em Editar para alterar':'Dados do veículo'}</p>
+        <div class="section-label">Tipo e vínculo atual</div>
+        <div class="fgrid">
+          <div class="field"><label for="f-tipo">Tipo</label><select id="f-tipo" data-key="tipo" ${locked?'disabled':''}>
+            <option value="cavalo" ${rec.tipo==='cavalo'?'selected':''}>Cavalo</option>
+            <option value="reboque" ${rec.tipo==='reboque'?'selected':''}>Reboque</option>
+            <option value="semireboque" ${rec.tipo==='semireboque'?'selected':''}>Semi-reboque</option>
+            <option value="caminhao" ${rec.tipo==='caminhao'?'selected':''}>Caminhão (carga simples)</option>
+          </select></div>
+          <div class="field"><label for="f-motoristaAtualId">Motorista atual</label>
+            <select id="f-motoristaAtualId" data-key="motoristaAtualId" ${locked?'disabled':''} onchange="App.updateCnhBadge()">${motoristaOptions}</select>
+            <div id="cnh-badge" class="cnh-badge">${cnhBadgeHtml(rec.motoristaAtualId)}</div>
+          </div>
+        </div>
+        <div class="section-label">Veículo</div>
+        <div class="fgrid">${inputs}</div>
+        ${histSection}
+        <div class="modal-actions">${actions}</div>
+      </div>
+    </div>`;
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+async function seedIfNeeded(){
+  const seedMotoristas = [
+    {id:'seed-almiro', nome:'Almiro Aparecido Zambon', cpf:'667.078.569-15', rg:'56.488.202 SSP/SP', cnhNumero:'03307583096', cnhExpedicao:'2023-07-12', cnhVencimento:'2027-07-06', telefone:''},
+    {id:'seed-alex', nome:'Alex da Silva Ferreira', cpf:'219.742.388-65', rg:'34.154.751 SSP/SP', cnhNumero:'01453307207', cnhExpedicao:'2023-11-09', cnhVencimento:'2033-11-07', telefone:''},
+    {id:'seed-adriano', nome:'Adriano Vieira da Silva', cpf:'003.610.779-47', rg:'3.732.197 SSP/SC', cnhNumero:'00784791314', cnhExpedicao:'2022-09-01', cnhVencimento:'2032-08-28', telefone:'(85) 98104-6303'},
+    {id:'seed-anderson', nome:'Anderson Pereira da Silva', cpf:'279.623.728-18', rg:'29.988.270 SSP/SP', cnhNumero:'01552204446', cnhExpedicao:'2023-11-23', cnhVencimento:'2028-11-17', telefone:''},
+    {id:'seed-anilton', nome:'Anilton Mendes Cardozo', cpf:'017.987.148-09', rg:'12.866.710 SSP/SP', cnhNumero:'00755031506', cnhExpedicao:'2024-09-06', cnhVencimento:'2029-09-05', telefone:''},
+    {id:'seed-antek', nome:'Antek de Oliveira', cpf:'255.099.368-35', rg:'27.706.643 SSP/SP', cnhNumero:'02638355219', cnhExpedicao:'2025-02-01', cnhVencimento:'2030-11-12', telefone:''},
+    {id:'seed-carlos', nome:'Carlos Ricardo dos Santos Munhos', cpf:'249.021.848-42', rg:'25.637.887 SSP/SP', cnhNumero:'01851599980', cnhExpedicao:'2022-08-25', cnhVencimento:'2032-08-15', telefone:''},
+    {id:'seed-cassio', nome:'Cassio Bueno Barbosa', cpf:'374.460.038-63', rg:'35.147.097-9 SSP/SP', cnhNumero:'04652028042', cnhExpedicao:'2022-06-22', cnhVencimento:'2032-05-10', telefone:''},
+    {id:'seed-claudemir', nome:'Claudemir Alves', cpf:'148.180.758-76', rg:'21.308.888 SSP/SP', cnhNumero:'02463951167', cnhExpedicao:'2024-01-24', cnhVencimento:'2034-01-22', telefone:''},
+    {id:'seed-clebson', nome:'Clebson dos Santos da Silva', cpf:'326.809.828-27', rg:'42.722.881 SSP/SP', cnhNumero:'03512100901', cnhExpedicao:'2024-03-18', cnhVencimento:'2034-03-05', telefone:''},
+    {id:'seed-cleiton', nome:'Cleiton Daniel da Silva', cpf:'042.142.079-04', rg:'4.018.817 SSP/SC', cnhNumero:'03740593733', cnhExpedicao:'2025-01-29', cnhVencimento:'2035-01-23', telefone:''},
+    {id:'seed-cristiano', nome:'Cristiano Sanches', cpf:'136.730.338-66', rg:'20.282.183 SSP/SP', cnhNumero:'00894359764', cnhExpedicao:'2024-12-05', cnhVencimento:'2029-12-03', telefone:''},
+    {id:'seed-david', nome:'David Alvaro da Silva', cpf:'180.330.558-47', rg:'28.126.742 SSP/SP', cnhNumero:'02305872281', cnhExpedicao:'2022-05-25', cnhVencimento:'2032-05-19', telefone:''},
+    {id:'seed-devlly', nome:'Devlly Alcantara Ferreira', cpf:'360.205.398-90', rg:'43.922.928 SSP/SP', cnhNumero:'03992905549', cnhExpedicao:'2023-10-18', cnhVencimento:'2033-10-13', telefone:''},
+    {id:'seed-dionas', nome:'Dionas Jeronimo Borges', cpf:'089.874.629-94', rg:'5.692.053 SSP/SC', cnhNumero:'05365581038', cnhExpedicao:'2025-03-14', cnhVencimento:'2035-02-06', telefone:''},
+    {id:'seed-douglas', nome:'Douglas Rainert', cpf:'037.404.979-39', rg:'3.899.167 SSP/SC', cnhNumero:'01552717079', cnhExpedicao:'2021-06-25', cnhVencimento:'2026-06-07', telefone:''},
+    {id:'seed-eduardo', nome:'Eduardo Minelgido Caetano', cpf:'932.445.259-20', rg:'3.192.421 SSP/SC', cnhNumero:'01704282479', cnhExpedicao:'2025-01-24', cnhVencimento:'2030-11-18', telefone:''},
+    {id:'seed-erisvaldo', nome:'Erisvaldo Jesus Madeira', cpf:'187.027.858-54', rg:'28.462.027 SSP/SP', cnhNumero:'01673049275', cnhExpedicao:'2022-03-03', cnhVencimento:'2032-02-24', telefone:''},
+    {id:'seed-fabricio', nome:'Fabricio de Paiva Silva', cpf:'228.166.618-22', rg:'44.165.146 SSP/SP', cnhNumero:'02231388728', cnhExpedicao:'2024-08-22', cnhVencimento:'2034-08-17', telefone:''},
+    {id:'seed-frank', nome:'Frank Andrade de Oliveira', cpf:'386.476.228-63', rg:'48.584.249 SSP/SP', cnhNumero:'05104804208', cnhExpedicao:'2024-04-30', cnhVencimento:'2034-04-25', telefone:'(13) 98868-9205'},
+    {id:'seed-gilmar', nome:'Gilmar Sidenei da Silva', cpf:'016.421.479-82', rg:'5470809 SSP/SC', cnhNumero:'02837069305', cnhExpedicao:'2021-07-28', cnhVencimento:'2031-07-18', telefone:''},
+    {id:'seed-guilherme', nome:'Guilherme Vieira Machado', cpf:'452.409.748-10', rg:'44662907 SSP/SP', cnhNumero:'06572113710', cnhExpedicao:'2024-07-11', cnhVencimento:'2034-07-09', telefone:''},
+    {id:'seed-gustavo', nome:'Gustavo dos Santos Maia', cpf:'445.184.768-08', rg:'53878234 SSP/SP', cnhNumero:'07033738001', cnhExpedicao:'2023-10-26', cnhVencimento:'2033-09-18', telefone:''},
+    {id:'seed-haroldo', nome:'Haroldo Adenilson de Melo', cpf:'049.310.226-42', rg:'12641404 SSP/MG', cnhNumero:'01738093382', cnhExpedicao:'2025-01-16', cnhVencimento:'2031-10-08', telefone:''},
+    {id:'seed-joab', nome:'Joab Cordeiro de Souza', cpf:'279.294.088-33', rg:'50238654 SSP/SP', cnhNumero:'00776290680', cnhExpedicao:'2026-03-06', cnhVencimento:'2036-02-10', telefone:'(13) 99625-2028'},
+    {id:'seed-joaocarlos', nome:'João Carlos de Oliveira', cpf:'100.677.736-99', rg:'MG17260057 SSP/MG', cnhNumero:'07413351135', cnhExpedicao:'2025-08-26', cnhVencimento:'2035-04-11', telefone:''},
+    {id:'seed-joel', nome:'Joel Pontes', cpf:'788.772.539-91', rg:'35792930 SSP/SP', cnhNumero:'02336804594', cnhExpedicao:'2022-07-21', cnhVencimento:'2027-07-19', telefone:''},
+    {id:'seed-jonas', nome:'Jonas Schwarz', cpf:'098.106.869-35', rg:'6719278 SSP/SC', cnhNumero:'06204703173', cnhExpedicao:'2022-05-25', cnhVencimento:'2032-05-22', telefone:''},
+    {id:'seed-jonathan', nome:'Jonathan Vinicius da Silva', cpf:'359.678.278-38', rg:'40288793 SSP/SP', cnhNumero:'04591484315', cnhExpedicao:'2025-07-07', cnhVencimento:'2035-07-04', telefone:''},
+    {id:'seed-josecarlosvirgens', nome:'Jose Carlos das Virgens dos Santos', cpf:'101.987.828-29', rg:'20819740 SSP/SP', cnhNumero:'03502846268', cnhExpedicao:'2023-06-27', cnhVencimento:'2028-06-20', telefone:''},
+    {id:'seed-kawanderson', nome:'Kawanderson Leon Oliveira Santos', cpf:'418.860.378-09', rg:'40123042 SSP/SP', cnhNumero:'05468142437', cnhExpedicao:'2024-10-04', cnhVencimento:'2034-09-23', telefone:''},
+    {id:'seed-lucas', nome:'Lucas Felipe Gabriel de Miranda', cpf:'104.787.859-33', rg:'10478785933 SSP/SC', cnhNumero:'08052137765', cnhExpedicao:'2025-10-06', cnhVencimento:'2035-08-05', telefone:''},
+    {id:'seed-luisfaria', nome:'Luis Faria de Almeida', cpf:'739.034.266-87', rg:'M5522335 SSP/MG', cnhNumero:'01879566364', cnhExpedicao:'2021-05-20', cnhVencimento:'2031-05-18', telefone:''},
+    {id:'seed-marcelo', nome:'Marcelo Santana de Souza', cpf:'331.314.598-16', rg:'41094250 SSP/SP', cnhNumero:'03179065913', cnhExpedicao:'2023-03-30', cnhVencimento:'2033-03-27', telefone:''},
+    {id:'seed-marcoalcantara', nome:'Marco Alves Alcantara', cpf:'083.912.738-30', rg:'18835474 SSP/SP', cnhNumero:'03057459281', cnhExpedicao:'2025-02-25', cnhVencimento:'2030-02-17', telefone:''},
+    {id:'seed-marcos-maurizenz', nome:'Marcos Jose Maurizenz', cpf:'003.398.859-55', rg:'3637680 SSP/SC', dataNascimento:'1980-01-18', cnhNumero:'01882572902', cnhCategoria:'AE', cnhExpedicao:'2026-01-12', cnhVencimento:'2031-01-09', telefone:'(47) 99705-7917', antt:''},
+    {id:'seed-mario-adriano', nome:'Mario Augusto da Silva Adriano', cpf:'046.705.558-04', rg:'155332302 SSP/SP', dataNascimento:'1963-09-07', cnhNumero:'01959826645', cnhCategoria:'AE', cnhExpedicao:'2023-06-05', cnhVencimento:'2027-12-08', telefone:'', antt:''},
+    {id:'seed-mario-barboza', nome:'Mario Barboza', cpf:'248.228.218-70', rg:'21785649 SSP/SP', dataNascimento:'1972-09-06', cnhNumero:'01888370207', cnhCategoria:'AE', cnhExpedicao:'2021-06-29', cnhVencimento:'2031-06-24', telefone:'', antt:''},
+    {id:'seed-mauricio-paulino', nome:'Mauricio Paulino dos Santos', cpf:'159.210.098-81', rg:'25112117 SSP/SP', dataNascimento:'1973-09-10', cnhNumero:'02011832648', cnhCategoria:'E', cnhExpedicao:'2022-02-15', cnhVencimento:'2032-02-15', telefone:'', antt:''},
+    {id:'seed-mauricio-soares', nome:'Mauricio Soares Gomes Filho', cpf:'398.382.028-00', rg:'48331704 SSP/SP', dataNascimento:'1991-02-17', cnhNumero:'05251849523', cnhCategoria:'AE', cnhExpedicao:'2025-05-08', cnhVencimento:'2035-04-22', telefone:'', antt:''},
+    {id:'seed-pedro-olimpio', nome:'Pedro Olimpio da Costa', cpf:'057.717.129-14', rg:'6685028 SSP/SC', dataNascimento:'1998-06-09', cnhNumero:'06854877900', cnhCategoria:'AE', cnhExpedicao:'2022-10-04', cnhVencimento:'2032-08-24', telefone:'', antt:''},
+    {id:'seed-rafael-silva-santos', nome:'Rafael Silva dos Santos', cpf:'337.502.428-28', rg:'44268626 SSP/SP', dataNascimento:'1985-01-10', cnhNumero:'02855170970', cnhCategoria:'AE', cnhExpedicao:'2021-10-05', cnhVencimento:'2031-09-28', telefone:'', antt:''},
+    {id:'seed-rafael-simplicio', nome:'Rafael Simplicio dos Santos', cpf:'408.449.108-05', rg:'467523216 SSP/SP', dataNascimento:'1990-08-07', cnhNumero:'04502951530', cnhCategoria:'AE', cnhExpedicao:'2021-09-01', cnhVencimento:'2031-07-07', telefone:'(13) 99649-4706', antt:''},
+    {id:'seed-renan-paulo', nome:'Renan Paulo Ribeiro da Silva', cpf:'086.782.429-81', rg:'6219475 SSP/SC', dataNascimento:'1991-04-11', cnhNumero:'05212791401', cnhCategoria:'AE', cnhExpedicao:'2025-05-22', cnhVencimento:'2035-05-11', telefone:'', antt:'058537322'},
+    {id:'seed-renan-fogaca', nome:'Renan Silva Fogaca', cpf:'420.548.248-52', rg:'43292541 SSP/SP', dataNascimento:'1993-08-02', cnhNumero:'06999761710', cnhCategoria:'AE', cnhExpedicao:'2022-05-04', cnhVencimento:'2032-02-25', telefone:'', antt:'056968855'},
+    {id:'seed-renato-santos', nome:'Renato dos Santos', cpf:'308.812.368-88', rg:'34896330 SSP/SP', dataNascimento:'1985-02-21', cnhNumero:'03357804518', cnhCategoria:'AE', cnhExpedicao:'2021-08-21', cnhVencimento:'2031-08-19', telefone:'', antt:''},
+    {id:'seed-robert-lossurdo', nome:'Robert Inacio Lossurdo', cpf:'489.693.688-41', rg:'38535975 SSP/SP', dataNascimento:'1999-12-20', cnhNumero:'07148527579', cnhCategoria:'E', cnhExpedicao:'2023-11-28', cnhVencimento:'2033-10-11', telefone:'', antt:''},
+    {id:'seed-roberto-matias-jr', nome:'Roberto Matias Junior', cpf:'313.177.308-10', rg:'41308935 SSP/SP', dataNascimento:'1982-03-30', cnhNumero:'02195163863', cnhCategoria:'AE', cnhExpedicao:'2024-02-29', cnhVencimento:'2034-02-28', telefone:'', antt:'058493222'},
+    {id:'seed-rogerio-mesquita', nome:'Rogerio Correia Mesquita', cpf:'070.252.108-62', rg:'17750560 SSP/SP', dataNascimento:'1969-11-05', cnhNumero:'04042419702', cnhCategoria:'AE', cnhExpedicao:'2025-04-01', cnhVencimento:'2030-03-26', telefone:'', antt:''},
+    {id:'seed-ronaldo-hungria', nome:'Ronaldo Hungria Andrade', cpf:'353.049.338-42', rg:'40723988 SSP/SP', dataNascimento:'1988-02-01', cnhNumero:'04226805204', cnhCategoria:'AE', cnhExpedicao:'2025-01-07', cnhVencimento:'2034-12-30', telefone:'', antt:''},
+    {id:'seed-thiago-vieira', nome:'Thiago de Alcantara Vieira', cpf:'356.696.648-76', rg:'42649734 SSP/SP', dataNascimento:'1988-04-29', cnhNumero:'03968101150', cnhCategoria:'AE', cnhExpedicao:'2023-12-13', cnhVencimento:'2033-12-08', telefone:'', antt:''},
+    {id:'seed-vinicius-luna', nome:'Vinicius Luna de Jesus Gertrudes', cpf:'499.804.158-43', rg:'506747888 SSP/SP', dataNascimento:'1998-02-10', cnhNumero:'06669285922', cnhCategoria:'AE', cnhExpedicao:'2025-11-11', cnhVencimento:'2035-01-04', telefone:'', antt:''},
+    {id:'seed-willian-neumann', nome:'Willian Kadmiel Neumann', cpf:'100.416.749-01', rg:'6794450 SSP/SC', dataNascimento:'1997-12-31', cnhNumero:'06577730659', cnhCategoria:'AE', cnhExpedicao:'2025-12-08', cnhVencimento:'2035-12-02', telefone:'', antt:''}
+  ];
+  const seedVeiculos = [
+    {id:'seed-odr3g37', tipo:'cavalo', placa:'ODR3G37', marcaModelo:'M.BENZ/AXOR 2544 S', renavam:'00529480522', chassi:'9BM958443DB896574', ano:'2013', exercicio:'2026', cor:'Branca', antt:'', proprietario:'GGM AG LOG LTDA', proprietarioDoc:'47.958.477/0001-48', motoristaAtualId:'seed-almiro'},
+    {id:'seed-bwk3f41', tipo:'reboque', placa:'BWK3F41', marcaModelo:'REB/RANDON SR GR TR', renavam:'00404149855', chassi:'9ADG12430KS085537', ano:'1989', exercicio:'2026', cor:'Branca', antt:'', proprietario:'GGM AG LOG LTDA', proprietarioDoc:'47.958.477/0001-48', motoristaAtualId:'seed-almiro'},
+    {id:'seed-ffw5e26', tipo:'semireboque', placa:'FFW5E26', marcaModelo:'SR/RODOFORTSA SRFG 3E', renavam:'00559317603', chassi:'95TF1543DDS010346', ano:'2013', exercicio:'2026', cor:'Cinza', antt:'', proprietario:'GGM AG LOG LTDA', proprietarioDoc:'47.958.477/0001-48', motoristaAtualId:'seed-almiro'},
+    {id:'seed-jdb0a11', tipo:'cavalo', placa:'JDB0A11', marcaModelo:'VOLVO/FH12 380 4X2T', renavam:'00894408658', chassi:'9BVAN50A96E720902', ano:'2006', exercicio:'2025', cor:'Amarela', antt:'', proprietario:'Alex da Silva Ferreira', proprietarioDoc:'219.742.388-65', motoristaAtualId:'seed-alex'},
+    {id:'seed-bsg2a82', tipo:'semireboque', placa:'BSG2A82', marcaModelo:'REB/A.GUERRA', renavam:'00649624149', chassi:'9AAJ07230MC007245', ano:'1991', exercicio:'2025', cor:'Cinza', antt:'', proprietario:'Alex da Silva Ferreira', proprietarioDoc:'219.742.388-65', motoristaAtualId:'seed-alex'},
+    {id:'seed-mii2668', tipo:'cavalo', placa:'MII2668', marcaModelo:'SCANIA/G 380 A6X2', renavam:'00366613456', chassi:'9BSG6X200B3696444', ano:'2011', exercicio:'2025', cor:'Branca', antt:'049823244', proprietario:'Edgar Bankhardt', proprietarioDoc:'008.170.339-20', motoristaAtualId:'seed-adriano'},
+    {id:'seed-ryx2b19', tipo:'semireboque', placa:'RYX2B19', marcaModelo:'SR/NOSTRA SRCF 3E', renavam:'01409939496', chassi:'9A9CF1530S1FG1423', ano:'2024', exercicio:'2025', cor:'Preta', antt:'052782999', proprietario:'Bankhardt Transportes LTDA', proprietarioDoc:'34.489.312/0001-22', motoristaAtualId:'seed-adriano'},
+    {id:'seed-hzc9j97', tipo:'cavalo', placa:'HZC9J97', marcaModelo:'M.BENZ/LS 1935', renavam:'00612665763', chassi:'9BM388054PB979079', ano:'1993', exercicio:'2025', cor:'Branca', antt:'', proprietario:'Anderson Pereira da Silva', proprietarioDoc:'279.623.728-18', motoristaAtualId:'seed-anderson'},
+    {id:'seed-cvn1590', tipo:'semireboque', placa:'CVN1590', marcaModelo:'SR/RANDON SR CA', renavam:'00740561448', chassi:'9ADG1243YYM155443', ano:'2000', exercicio:'2025', cor:'Branca', antt:'', proprietario:'Anderson Pereira da Silva', proprietarioDoc:'279.623.728-18', motoristaAtualId:'seed-anderson'},
+    {id:'seed-mfl5j56', tipo:'cavalo', placa:'MFL5J56', marcaModelo:'VOLVO/FH 400 4X2T', renavam:'00988057140', chassi:'9BVASG0A29E745245', ano:'2008', exercicio:'2025', cor:'Branca', antt:'', proprietario:'Anilton Mendes Cardozo', proprietarioDoc:'017.987.148-09', motoristaAtualId:'seed-anilton'},
+    {id:'seed-bxj7542', tipo:'semireboque', placa:'BXJ7542', marcaModelo:'REB/A.GUERRA', renavam:'00638800471', chassi:'9AAJ07230SC014531', ano:'1995', exercicio:'2025', cor:'Cinza', antt:'', proprietario:'Anilton Mendes Cardozo', proprietarioDoc:'017.987.148-09', motoristaAtualId:'seed-anilton'},
+    {id:'seed-fyj8d77', tipo:'cavalo', placa:'FYJ8D77', marcaModelo:'MAN/TGX 28.440 6X2 T', renavam:'01128935268', chassi:'95388XZZ3JE800197', ano:'2017', exercicio:'2025', cor:'Branca', antt:'', proprietario:'Antek de Oliveira', proprietarioDoc:'255.099.368-35', motoristaAtualId:'seed-antek'},
+    {id:'seed-dbc1c67', tipo:'semireboque', placa:'DBC1C67', marcaModelo:'SR/FACCHINI SRF PC', renavam:'00853851050', chassi:'94BJ124355V009118', ano:'2005', exercicio:'2025', cor:'Azul', antt:'', proprietario:'Antek de Oliveira', proprietarioDoc:'255.099.368-35', motoristaAtualId:'seed-antek'},
+    {id:'seed-bqk3193', tipo:'caminhao', placa:'BQK3193', marcaModelo:'M.BENZ/912', renavam:'00615973744', chassi:'9BM688123PB003748', ano:'1993', exercicio:'2026', cor:'Branca', antt:'053357655', proprietario:'Carlos Ricardo dos Santos Munhos', proprietarioDoc:'249.021.848-42', motoristaAtualId:'seed-carlos'},
+    {id:'seed-cua6g67', tipo:'cavalo', placa:'CUA6G67', marcaModelo:'M.BENZ/LS 1634', renavam:'00208229183', chassi:'9BM695053AB711519', ano:'2010', exercicio:'2025', cor:'Branca', antt:'', proprietario:'Cassio Bueno Barbosa', proprietarioDoc:'374.460.038-63', motoristaAtualId:'seed-cassio'},
+    {id:'seed-dbm7b97', tipo:'semireboque', placa:'DBM7B97', marcaModelo:'SR/FACCHINI SRF PC', renavam:'00854678034', chassi:'94BJ073355V009230', ano:'2005', exercicio:'2025', cor:'Verde', antt:'', proprietario:'Cassio Bueno Barbosa', proprietarioDoc:'374.460.038-63', motoristaAtualId:'seed-cassio'},
+    {id:'seed-iir8c82', tipo:'cavalo', placa:'IIR8C82', marcaModelo:'M.BENZ/LS 1938', renavam:'00712946870', chassi:'9BM696090XB188648', ano:'1999', exercicio:'2023', cor:'Vermelha', antt:'', proprietario:'Jeclau Transportes Eireli ME', proprietarioDoc:'28.923.502/0001-03', motoristaAtualId:'seed-claudemir'},
+    {id:'seed-aeu7846', tipo:'semireboque', placa:'AEU7846', marcaModelo:'SR/NOMA', renavam:'00624228282', chassi:'9A9G12430R1AV8789', ano:'1994', exercicio:'2023', cor:'Prata', antt:'', proprietario:'Milton Gomes dos Santos', proprietarioDoc:'001.743.338-03', motoristaAtualId:'seed-claudemir'},
+    {id:'seed-mpj2c01', tipo:'cavalo', placa:'MPJ2C01', marcaModelo:'M.BENZ/LS 1634', renavam:'00820077054', chassi:'9BM6950523B362336', ano:'2003', exercicio:'2025', cor:'Branca', antt:'', proprietario:'Cassio Bueno Barbosa', proprietarioDoc:'374.460.038-63', motoristaAtualId:'seed-clebson'},
+    {id:'seed-cua5d01', tipo:'semireboque', placa:'CUA5D01', marcaModelo:'SR/RODOLINEA PC 3E76', renavam:'00983389365', chassi:'943PRC07381002667', ano:'2008', exercicio:'2025', cor:'Azul', antt:'', proprietario:'Cassio Bueno Barbosa', proprietarioDoc:'374.460.038-63', motoristaAtualId:'seed-clebson'},
+    {id:'seed-atm7d76', tipo:'cavalo', placa:'ATM7D76', marcaModelo:'IVECO/STRALIS 570S41T', renavam:'00210054379', chassi:'93ZS2MSH0A8807376', ano:'2010', exercicio:'2025', cor:'Prata', antt:'057836288', proprietario:'Boa Vista Vidros e Transportes LTDA', proprietarioDoc:'37.412.264/0001-62', motoristaAtualId:'seed-cleiton'},
+    {id:'seed-bcq6282', tipo:'semireboque', placa:'BCQ6282', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01174007629', chassi:'94BJ1243JKV061492', ano:'2018', exercicio:'2026', cor:'Preta', antt:'', proprietario:'FFX Marketing LTDA', proprietarioDoc:'51.213.889/0001-26', motoristaAtualId:'seed-cleiton'},
+    {id:'seed-mkg5f54', tipo:'cavalo', placa:'MKG5F54', marcaModelo:'M.BENZ/ACTROS 2546LS', renavam:'00542070731', chassi:'9BM934251DR669108', ano:'2013', exercicio:'2025', cor:'Prata', antt:'058216133', proprietario:'Juliana Antonio de Almeida', proprietarioDoc:'026.124.979-78', motoristaAtualId:'seed-cristiano'},
+    {id:'seed-dbc3j07', tipo:'semireboque', placa:'DBC3J07', marcaModelo:'SR/FACCHINI SRF CA', renavam:'00847695069', chassi:'94BA125355V008412', ano:'2005', exercicio:'2025', cor:'Verde', antt:'003022451', proprietario:'Eliane de Carvalho', proprietarioDoc:'197.466.188-14', motoristaAtualId:'seed-cristiano'},
+    {id:'seed-eyv9c06', tipo:'cavalo', placa:'EYV9C06', marcaModelo:'SCANIA/P 360 A6X2', renavam:'00497613204', chassi:'9BSP6X200D3817985', ano:'2012', exercicio:'2025', cor:'Branca', antt:'000479337', proprietario:'David Alvaro da Silva', proprietarioDoc:'180.330.558-47', motoristaAtualId:'seed-david'},
+    {id:'seed-mdn5a33', tipo:'semireboque', placa:'MDN5A33', marcaModelo:'SR/LIBRELATO SRCS 3E', renavam:'00919057713', chassi:'9A9CS42837LDJ5255', ano:'2007', exercicio:'2025', cor:'Preta', antt:'000479337', proprietario:'David Alvaro da Silva', proprietarioDoc:'180.330.558-47', motoristaAtualId:'seed-david'},
+    {id:'seed-jym0d60', tipo:'cavalo', placa:'JYM0D60', marcaModelo:'SCANIA/T113 H 4X2 360', renavam:'00633346527', chassi:'9BSTH4X2ZS3257442', ano:'1995', exercicio:'2025', cor:'Azul', antt:'', proprietario:'Devlly Alcantara Ferreira', proprietarioDoc:'360.205.398-90', motoristaAtualId:'seed-devlly'},
+    {id:'seed-rld6j69', tipo:'cavalo', placa:'RLD6J69', marcaModelo:'IVECO/STRALIS 600S44T', renavam:'01280331370', chassi:'93ZM2SSH0N8837672', ano:'2021', exercicio:'2025', cor:'Laranja', antt:'057480866', proprietario:'26.798.113 Ivanir Sozin', proprietarioDoc:'26.798.113/0001-78', motoristaAtualId:'seed-dionas'},
+    {id:'seed-qjn3j24', tipo:'semireboque', placa:'QJN3J24', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01191811589', chassi:'94BJ1243KKV065964', ano:'2019', exercicio:'2025', cor:'Preta', antt:'', proprietario:'Mario Cesar Cabral', proprietarioDoc:'615.306.979-72', motoristaAtualId:'seed-dionas'},
+    {id:'seed-mlu2g00', tipo:'cavalo', placa:'MLU2G00', marcaModelo:'SCANIA/G 400 A6X2', renavam:'00582865824', chassi:'9BSG6X200D3841303', ano:'2013', exercicio:'2025', cor:'Branca', antt:'051570333', proprietario:'Rodo Simba Transportes Rodoviarios LTDA', proprietarioDoc:'32.488.591/0001-84', motoristaAtualId:'seed-douglas'},
+    {id:'seed-rah9388', tipo:'semireboque', placa:'RAH9388', marcaModelo:'SR/PALMEIRA SRCF 3E', renavam:'01212163165', chassi:'96AF1543KLJ003132', ano:'2019', exercicio:'2025', cor:'Preta', antt:'', proprietario:'Dvojatzki Transportes LTDA', proprietarioDoc:'09.096.008/0001-78', motoristaAtualId:'seed-douglas'},
+    {id:'seed-ryw7d13', tipo:'cavalo', placa:'RYW7D13', marcaModelo:'SCANIA/R450 A6X2', renavam:'01386933667', chassi:'9BSR6X200R4065849', ano:'2024', exercicio:'2025', cor:'Bege', antt:'', proprietario:'Rodojjan Transportes LTDA', proprietarioDoc:'11.931.567/0001-06', motoristaAtualId:'seed-eduardo'},
+    {id:'seed-sxn5e92', tipo:'semireboque', placa:'SXN5E92', marcaModelo:'SR/LINSHALM SRCF 3ECL', renavam:'01428043885', chassi:'9A908RCS3S1CX2462', ano:'2024', exercicio:'2026', cor:'Preta', antt:'', proprietario:'Rodojjan Transportes LTDA', proprietarioDoc:'11.931.567/0001-06', motoristaAtualId:'seed-eduardo'},
+    {id:'seed-esu6g76', tipo:'semireboque', placa:'ESU6G76', marcaModelo:'SR/PASTRE PCONTEINER 3E', renavam:'00348148712', chassi:'9APJ12430BP000019', ano:'2011', exercicio:'2025', cor:'Cinza', antt:'010711860', proprietario:'Erisvaldo Jesus Madeira', proprietarioDoc:'187.027.858-54', motoristaAtualId:'seed-erisvaldo'},
+    {id:'seed-nqv5b57', tipo:'cavalo', placa:'NQV5B57', marcaModelo:'I/IVECOSTRALISHD 490S38T', renavam:'00154820881', chassi:'8ATM2ARH09X066614', ano:'2008', exercicio:'2025', cor:'Branca', antt:'010711860', proprietario:'Erisvaldo Jesus Madeira', proprietarioDoc:'187.027.858-54', motoristaAtualId:'seed-erisvaldo'},
+    {id:'seed-cvn0j14', tipo:'cavalo', placa:'CVN0J14', marcaModelo:'SCANIA/T124 GA4X2NZ 360', renavam:'00732612233', chassi:'9BST4X2A0Y3515517', ano:'2000', exercicio:'2025', cor:'Branca', antt:'052298266', proprietario:'Fabricio de Paiva Silva', proprietarioDoc:'228.166.618-22', motoristaAtualId:'seed-fabricio'},
+    {id:'seed-dvs2a13', tipo:'semireboque', placa:'DVS2A13', marcaModelo:'SR/RODOTEC PC 4020', renavam:'00960855092', chassi:'9A9SR3E138SDU8061', ano:'2008', exercicio:'2025', cor:'Cinza', antt:'052298266', proprietario:'Fabricio de Paiva Silva', proprietarioDoc:'228.166.618-22', motoristaAtualId:'seed-fabricio'},
+    {id:'seed-rxk6d83', tipo:'cavalo', placa:'RXK6D83', marcaModelo:'VW/28.460 METEOR 6X2', renavam:'01296567769', chassi:'953998TH6PR200251', ano:'2022', exercicio:'2025', cor:'Vermelha', antt:'057462933', proprietario:'Frank Andrade de Oliveira', proprietarioDoc:'386.476.228-63', motoristaAtualId:'seed-frank'},
+    {id:'seed-ufg7b05', tipo:'semireboque', placa:'UFG7B05', marcaModelo:'SR/LIBRELATO SRCC 3E', renavam:'01462775524', chassi:'9A9CC2573T2DJ5064', ano:'2025', exercicio:'2025', cor:'Preta', antt:'057462933', proprietario:'Frank Andrade de Oliveira', proprietarioDoc:'386.476.228-63', motoristaAtualId:'seed-frank'},
+    {id:'seed-izy5d32', tipo:'cavalo', placa:'IZY5D32', marcaModelo:'DAF/XF105 FTS 510A', renavam:'01226368546', chassi:'98PTS47MSLB109753', ano:'2019', exercicio:'2026', cor:'Prata', antt:'052126877', proprietario:'Amanda e Antonio Transportes Rodoviarios LTDA', proprietarioDoc:'34.270.294/0001-93', motoristaAtualId:'seed-gilmar'},
+    {id:'seed-mlx9a22', tipo:'semireboque', placa:'MLX9A22', marcaModelo:'SR/FACCHINI SRF PC', renavam:'00995487308', chassi:'94BJ1243DEV043266', ano:'2013', exercicio:'2026', cor:'Cinza', antt:'052126877', proprietario:'Amanda e Antonio Transportes Rodoviarios LTDA', proprietarioDoc:'34.270.294/0001-93', motoristaAtualId:'seed-gilmar'},
+    {id:'seed-jjz9i63', tipo:'cavalo', placa:'JJZ9I63', marcaModelo:'M.BENZ/LS 1938', renavam:'00728542510', chassi:'9BM696090XB215593', ano:'1999', exercicio:'2026', cor:'Branca', antt:'057559299', proprietario:'Guilherme Vieira Machado', proprietarioDoc:'452.409.748-10', motoristaAtualId:'seed-guilherme'},
+    {id:'seed-era0169', tipo:'semireboque', placa:'ERA0169', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01173891207', chassi:'94BJ0733JKV061205', ano:'2018', exercicio:'2025', cor:'Preta', antt:'', proprietario:'Marintter Gold Transp e Servicos LTDA', proprietarioDoc:'01.178.494/0001-61', motoristaAtualId:'seed-guilherme'},
+    {id:'seed-kll6255', tipo:'cavalo', placa:'KLL6255', marcaModelo:'VOLVO/NH12380 4X2T', renavam:'00750491280', chassi:'9BVN4B5A01E675435', ano:'2000', exercicio:'2025', cor:'Azul', antt:'', proprietario:'Danilo Santos da Silva', proprietarioDoc:'328.608.238-40', motoristaAtualId:'seed-gustavo'},
+    {id:'seed-tku6g28', tipo:'semireboque', placa:'TKU6G28', marcaModelo:'SR/RODOTEC PC 4020', renavam:'01431367602', chassi:'9A9SR312SSSDU8003', ano:'2025', exercicio:'2026', cor:'Preta', antt:'051542666', proprietario:'Aron Diego de Oliveira Transportes', proprietarioDoc:'34.938.361/0001-03', motoristaAtualId:'seed-gustavo'},
+    {id:'seed-gvj9h33', tipo:'semireboque', placa:'GVJ9H33', marcaModelo:'SR/RANDON SR CA', renavam:'00701946750', chassi:'9ADG1243WWM139032', ano:'1998', exercicio:'2026', cor:'Branca', antt:'', proprietario:'Haroldo Adenilson de Melo', proprietarioDoc:'049.310.226-42', motoristaAtualId:'seed-haroldo'},
+    {id:'seed-ile3i84', tipo:'cavalo', placa:'ILE3I84', marcaModelo:'SCANIA/R124 LA6X2NA 360', renavam:'00803693125', chassi:'9BSR6X2A033540707', ano:'2003', exercicio:'2026', cor:'Branca', antt:'', proprietario:'Sebastiao Lucio de Melo', proprietarioDoc:'440.155.186-91', motoristaAtualId:'seed-haroldo'},
+    {id:'seed-giv3j11', tipo:'semireboque', placa:'GIV3J11', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01287409803', chassi:'94BJ1243NNV000052', ano:'2022', exercicio:'2025', cor:'Cinza', antt:'057890500', proprietario:'ABC LOG LTDA', proprietarioDoc:'58.946.463/0001-20', motoristaAtualId:'seed-joab'},
+    {id:'seed-jba9e73', tipo:'cavalo', placa:'JBA9E73', marcaModelo:'SCANIA/R450 A6X2', renavam:'01282582515', chassi:'9BSR6X200N4005539', ano:'2021', exercicio:'2026', cor:'Vermelha', antt:'', proprietario:'Dyana Souza Marinho', proprietarioDoc:'300.750.388-46', motoristaAtualId:'seed-joab'},
+    {id:'seed-tls1d64', tipo:'semireboque', placa:'TLS1D64', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01448614314', chassi:'94BJ1243SSV003164', ano:'2025', exercicio:'2026', cor:'Preta', antt:'', proprietario:'Henrique Dias Marinho', proprietarioDoc:'305.034.588-80', motoristaAtualId:'seed-joab'},
+    {id:'seed-cry3972', tipo:'reboque', placa:'CRY3972', marcaModelo:'REB/FNV - FRUEHAUF', renavam:'00382880560', chassi:'SER10726MH', ano:'1987', exercicio:'2026', cor:'Cinza', antt:'001483466', proprietario:'Rapido Tres Pontas LTDA', proprietarioDoc:'61.200.234/0001-77', motoristaAtualId:'seed-joaocarlos'},
+    {id:'seed-gxm1g69', tipo:'cavalo', placa:'GXM1G69', marcaModelo:'VOLVO/FH12 420 4X2T', renavam:'00870186574', chassi:'9BVAN60A96E716614', ano:'2005', exercicio:'2025', cor:'Vermelha', antt:'001483466', proprietario:'Rapido Tres Pontas LTDA', proprietarioDoc:'61.200.234/0001-77', motoristaAtualId:'seed-joaocarlos'},
+    {id:'seed-bto8i70', tipo:'cavalo', placa:'BTO8I70', marcaModelo:'VOLVO/NH12380 4X2T', renavam:'00733929478', chassi:'9BVN4B5A0YE671616', ano:'2000', exercicio:'2025', cor:'Azul', antt:'056627933', proprietario:'Jose Valter Xavier de Barros', proprietarioDoc:'318.564.048-97', motoristaAtualId:'seed-joel'},
+    {id:'seed-cua6i11', tipo:'semireboque', placa:'CUA6I11', marcaModelo:'SR/RANDON SR CO', renavam:'00227404289', chassi:'9ADJ0733AAM311807', ano:'2010', exercicio:'2025', cor:'Preta', antt:'056627933', proprietario:'Jose Valter Xavier de Barros', proprietarioDoc:'318.564.048-97', motoristaAtualId:'seed-joel'},
+    {id:'seed-byc6h79', tipo:'cavalo', placa:'BYC6H79', marcaModelo:'SCANIA/T113 H 4X2 360', renavam:'00625208501', chassi:'9BSTH4X2ZR3254887', ano:'1994', exercicio:'2026', cor:'Azul', antt:'057568511', proprietario:'Auto Mecanica e Transportes Wandersee LTDA', proprietarioDoc:'23.292.730/0001-09', motoristaAtualId:'seed-jonas'},
+    {id:'seed-lxe0g31', tipo:'semireboque', placa:'LXE0G31', marcaModelo:'SR/RANDON', renavam:'00550581324', chassi:'29766', ano:'1976', exercicio:'2026', cor:'Laranja', antt:'', proprietario:'Amarildo Wandersee', proprietarioDoc:'420.017.149-04', motoristaAtualId:'seed-jonas'},
+    {id:'seed-nku4b52', tipo:'semireboque', placa:'NKU4B52', marcaModelo:'SR/GUERRA AG PC', renavam:'00961946857', chassi:'9AA09123G8C075652', ano:'2008', exercicio:'2025', cor:'Preta', antt:'', proprietario:'Regiane Pereira de Souza Nogueira', proprietarioDoc:'172.357.738-39', motoristaAtualId:'seed-jonathan'},
+    {id:'seed-rxu2b82', tipo:'cavalo', placa:'RXU2B82', marcaModelo:'VW/25.460 CTM 6X2', renavam:'01297974830', chassi:'953698TK9PR009857', ano:'2022', exercicio:'2025', cor:'Laranja', antt:'053222933', proprietario:'Luiz Fernando de Almeida Transportes', proprietarioDoc:'33.671.412/0001-02', motoristaAtualId:'seed-jonathan'},
+    {id:'seed-epu9f92', tipo:'caminhao', placa:'EPU9F92', marcaModelo:'VOLVO/MULTIEIXO VM260 ED', renavam:'00328640646', chassi:'93KP0E0C9BE127626', ano:'2011', exercicio:'2025', cor:'Vermelha', antt:'050940133', proprietario:'Jose Carlos das Virgens dos Santos', proprietarioDoc:'101.987.828-29', motoristaAtualId:'seed-josecarlosvirgens'},
+    {id:'seed-eod0e43', tipo:'semireboque', placa:'EOD0E43', marcaModelo:'SR/PALMEIRA SRCF 3E', renavam:'01353796067', chassi:'96AF1543PRJ005769', ano:'2023', exercicio:'2025', cor:'Cinza', antt:'048965428', proprietario:'JE Camargo Ribeiro Transporte ME', proprietarioDoc:'21.190.695/0001-91', motoristaAtualId:'seed-kawanderson'},
+    {id:'seed-jbi0c99', tipo:'cavalo', placa:'JBI0C99', marcaModelo:'SCANIA/R450 A6X2', renavam:'01274644892', chassi:'9BSR6X200N4000761', ano:'2021', exercicio:'2025', cor:'Prata', antt:'048965428', proprietario:'JE Camargo Ribeiro Transporte', proprietarioDoc:'21.190.695/0001-91', motoristaAtualId:'seed-kawanderson'},
+    {id:'seed-oqw9e99', tipo:'cavalo', placa:'OQW9E99', marcaModelo:'SCANIA/R 440 A6X2', renavam:'00581914473', chassi:'9BSR6X200D3841948', ano:'2013', exercicio:'2025', cor:'Branca', antt:'056246200', proprietario:'Edson Luiz Friedemann de Souza', proprietarioDoc:'091.083.499-75', motoristaAtualId:'seed-lucas'},
+    {id:'seed-qhg8d32', tipo:'semireboque', placa:'QHG8D32', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01044176781', chassi:'94BJ1243FFV047294', ano:'2015', exercicio:'2025', cor:'Cinza', antt:'056246200', proprietario:'Edson Luiz Friedemann de Souza', proprietarioDoc:'091.083.499-75', motoristaAtualId:'seed-lucas'},
+    {id:'seed-ffn2c03', tipo:'caminhao', placa:'FFN2C03', marcaModelo:'I/FORD TRANSIT 350L TA', renavam:'00503427713', chassi:'WF0XXXTBFBTJ29108', ano:'2011', exercicio:'2026', cor:'Branca', antt:'058930488', proprietario:'62.956.237 Luis Faria de Almeida', proprietarioDoc:'62.956.237/0001-06', motoristaAtualId:'seed-luisfaria'},
+    {id:'seed-suj0a09', tipo:'semireboque', placa:'SUJ0A09', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01382880623', chassi:'94BJ1243RRV002437', ano:'2024', exercicio:'2024', cor:'Preta', antt:'', proprietario:'Ubaldo Cardoso da Silva Junior', proprietarioDoc:'304.420.458-59', motoristaAtualId:'seed-marcelo'},
+    {id:'seed-bai3a11', tipo:'cavalo', placa:'BAI3A11', marcaModelo:'SCANIA/R 440 A6X2', renavam:'00500736537', chassi:'9BSR6X200D3819520', ano:'2012', exercicio:'2023', cor:'Branca', antt:'', proprietario:'Ubaldo Cardoso da Silva Junior', proprietarioDoc:'304.420.458-59', motoristaAtualId:'seed-marcelo'},
+    {id:'seed-cua6a10', tipo:'cavalo', placa:'CUA6A10', marcaModelo:'VOLVO/FH 400 6X2T', renavam:'00125624050', chassi:'9BVASG0C59E746715', ano:'2008', exercicio:'2025', cor:'Branca', antt:'055701144', proprietario:'LDN Com de P e Serv em Gerais LTDA', proprietarioDoc:'17.009.488/0001-10', motoristaAtualId:'seed-marcoalcantara'},
+    {id:'seed-btr0032', tipo:'semireboque', placa:'BTR0032', marcaModelo:'SR/RANDON SR CO', renavam:'00765815354', chassi:'9ADJ122312M167808', ano:'2001', exercicio:'2025', cor:'Azul', antt:'000026367', proprietario:'Pablo Transportes Rod e Locacoes de Equipamentos LTDA', proprietarioDoc:'00.777.051/0001-24', motoristaAtualId:'seed-marcoalcantara'},
+    {id:'seed-bbt9d39', tipo:'cavalo', placa:'BBT9D39', marcaModelo:'M.BENZ/AXOR 2544 LS', renavam:'01252979069', chassi:'9BM958444MB201210', ano:'2020', exercicio:'2025', cor:'Branca', antt:'056739177', anttNome:'AMKLOG Transportes e Logistica LTDA', anttDoc:'53.210.462/0001-08', proprietario:'AMKLOG Transportes e Logistica LTDA', proprietarioDoc:'53.210.462/0001-08', motoristaAtualId:'seed-marcos-maurizenz'},
+    {id:'seed-tpi0i17', tipo:'semireboque', placa:'TPI0I17', marcaModelo:'SR/PALMEIRA SRCF 3E', renavam:'01453337935', chassi:'96AF1543STJ007856', ano:'2025', exercicio:'2025', cor:'Preta', antt:'056739177', anttNome:'AMKLOG Transportes e Logistica LTDA', anttDoc:'53.210.462/0001-08', proprietario:'AMKLOG Transportes e Logistica LTDA', proprietarioDoc:'53.210.462/0001-08', motoristaAtualId:'seed-marcos-maurizenz'},
+    {id:'seed-dvs7a08', tipo:'cavalo', placa:'DVS7A08', marcaModelo:'VOLVO/FH 400 6X2T', renavam:'00971069034', chassi:'9BVASG0C18E741669', ano:'2008', exercicio:'2025', cor:'Vermelha', antt:'', anttNome:'', anttDoc:'', proprietario:'LDN Comercio de Pecas e Servicos em Gerais LTDA', proprietarioDoc:'17.009.488/0001-10', motoristaAtualId:'seed-mario-adriano'},
+    {id:'seed-tln8f49', tipo:'semireboque', placa:'TLN8F49', marcaModelo:'SR/TRUCKVAN VPC 40 3E', renavam:'01431548810', chassi:'97VPC403ES1007906', ano:'2024', exercicio:'2025', cor:'Preta', antt:'', anttNome:'', anttDoc:'', proprietario:'Luiz Decarli Neto', proprietarioDoc:'155.683.328-86', motoristaAtualId:'seed-mario-adriano'},
+    {id:'seed-daj2j37', tipo:'cavalo', placa:'DAJ2J37', marcaModelo:'M.BENZ/LS 1634', renavam:'00801318688', chassi:'9BM6950523B330786', ano:'2003', exercicio:'2024', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'Eduardo Cupertino Balbino de Castro', proprietarioDoc:'393.741.028-70', motoristaAtualId:'seed-mario-barboza'},
+    {id:'seed-cpj5d55', tipo:'semireboque', placa:'CPJ5D55', marcaModelo:'SR/RANDON', renavam:'00582507090', chassi:'23332', ano:'1975', exercicio:'2025', cor:'Cinza', antt:'049125266', anttNome:'Eduardo Cupertino Balbino de Castro', anttDoc:'393.741.028-70', proprietario:'Eduardo Cupertino Balbino de Castro', proprietarioDoc:'393.741.028-70', motoristaAtualId:'seed-mario-barboza'},
+    {id:'seed-bau7g12', tipo:'cavalo', placa:'BAU7G12', marcaModelo:'DAF/XF105 FTS 460A', renavam:'01098425739', chassi:'98PTS47MSHB101363', ano:'2016', exercicio:'2024', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'JDM Veiculos LTDA', proprietarioDoc:'50.076.878/0001-89', motoristaAtualId:'seed-mauricio-paulino'},
+    {id:'seed-tls0g80', tipo:'semireboque', placa:'TLS0G80', marcaModelo:'SR/RANDON SR BS CO 03E', renavam:'01422904439', chassi:'9ADJ1243RSM551403', ano:'2024', exercicio:'2024', cor:'Preta', antt:'', anttNome:'', anttDoc:'', proprietario:'Mauricio Paulino dos Santos', proprietarioDoc:'159.210.098-81', motoristaAtualId:'seed-mauricio-paulino'},
+    {id:'seed-byb3b13', tipo:'cavalo', placa:'BYB3B13', marcaModelo:'SCANIA/T112 H', renavam:'00207206368', chassi:'9BSTH4X2Z03216702', ano:'1984', exercicio:'2024', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'Alvaro Augusto Andrioso', proprietarioDoc:'268.044.308-08', motoristaAtualId:'seed-mauricio-soares'},
+    {id:'seed-btr2h41', tipo:'semireboque', placa:'BTR2H41', marcaModelo:'R/GUERRA CHARGER CS', renavam:'00708060560', chassi:'9AA271330WC024730', ano:'1998', exercicio:'2024', cor:'Azul', antt:'', anttNome:'', anttDoc:'', proprietario:'Mauricio Soares Gomes Filho', proprietarioDoc:'398.382.028-00', motoristaAtualId:'seed-mauricio-soares'},
+    {id:'seed-cyb3c33', tipo:'cavalo', placa:'CYB3C33', marcaModelo:'SCANIA/P114GA4X2NZ 330', renavam:'00754033201', chassi:'9BSP4X2A013524712', ano:'2001', exercicio:'2025', cor:'Vermelha', antt:'054303688', anttNome:'Rulian Antonio da Costa', anttDoc:'056.944.959-69', proprietario:'Rulian Antonio da Costa', proprietarioDoc:'056.944.959-69', motoristaAtualId:'seed-pedro-olimpio'},
+    {id:'seed-mdj1h91', tipo:'semireboque', placa:'MDJ1H91', marcaModelo:'SR/FACCHINI SRF PC', renavam:'00819864153', chassi:'94BJ124344V003269', ano:'2004', exercicio:'2025', cor:'Cinza', antt:'054303688', anttNome:'Rulian Antonio da Costa', anttDoc:'056.944.959-69', proprietario:'Rafael da Silva Orso', proprietarioDoc:'082.147.259-33', motoristaAtualId:'seed-pedro-olimpio'},
+    {id:'seed-byd2h72', tipo:'cavalo', placa:'BYD2H72', marcaModelo:'VOLVO/NL10 340 4X2', renavam:'00629706310', chassi:'9BVN2B2A0SE645572', ano:'1995', exercicio:'2025', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'Frank Andrade de Oliveira', proprietarioDoc:'386.476.228-63', motoristaAtualId:'seed-rafael-silva-santos'},
+    {id:'seed-oqn7398', tipo:'cavalo', placa:'OQN7398', marcaModelo:'IVECO/STRALIS 600S44T', renavam:'00559299559', chassi:'93ZM2SSH0D8823992', ano:'2013', exercicio:'2026', cor:'Branca', antt:'059190777', anttNome:'Erika Regina Magarone Matias', anttDoc:'405.426.318-65', proprietario:'Erika Regina Magarone Matias', proprietarioDoc:'405.426.318-65', motoristaAtualId:'seed-rafael-silva-santos'},
+    {id:'seed-azu0c88', tipo:'semireboque', placa:'AZU0C88', marcaModelo:'SR/RANDON SR CA', renavam:'00266051693', chassi:'9ADG1353ABM321625', ano:'2010', exercicio:'2026', cor:'Preta', antt:'059190777', anttNome:'Erika Regina Magarone Matias', anttDoc:'405.426.318-65', proprietario:'Frank Andrade de Oliveira', proprietarioDoc:'386.476.228-63', motoristaAtualId:'seed-rafael-silva-santos'},
+    {id:'seed-cfd4h29', tipo:'semireboque', placa:'CFD4H29', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01207038633', chassi:'94BJ1243KLV069135', ano:'2019', exercicio:'2026', cor:'Cinza', antt:'', anttNome:'', anttDoc:'', proprietario:'Frank Andrade de Oliveira', proprietarioDoc:'386.476.228-63', motoristaAtualId:'seed-rafael-silva-santos'},
+    {id:'seed-its2969', tipo:'cavalo', placa:'ITS2969', marcaModelo:'VW/25.390 CTC 6X2', renavam:'00494473100', chassi:'9536T8270DR302380', ano:'2012', exercicio:'2025', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'Monica Santos Rebelo', proprietarioDoc:'304.508.228-93', motoristaAtualId:'seed-rafael-simplicio'},
+    {id:'seed-krb5i08', tipo:'semireboque', placa:'KRB5I08', marcaModelo:'SR/FACCHINI SRF PC', renavam:'00961298146', chassi:'94BJ124388V018970', ano:'2008', exercicio:'2025', cor:'Cinza', antt:'', anttNome:'', anttDoc:'', proprietario:'Lucas da Silva', proprietarioDoc:'52.893.648/0001-38', motoristaAtualId:'seed-rafael-simplicio'},
+    {id:'seed-mjz6d95', tipo:'cavalo', placa:'MJZ6D95', marcaModelo:'SCANIA/G 360 A6X2', renavam:'00479503494', chassi:'9BSG6X200C3811233', ano:'2012', exercicio:'2025', cor:'Branca', antt:'058537322', anttNome:'Renan Paulo Ribeiro da Silva', anttDoc:'086.782.429-81', proprietario:'Renan Paulo Ribeiro da Silva', proprietarioDoc:'086.782.429-81', motoristaAtualId:'seed-renan-paulo'},
+    {id:'seed-tpp7d38', tipo:'semireboque', placa:'TPP7D38', marcaModelo:'SR/LIBRELATO SRCC 3E', renavam:'01463253483', chassi:'9A9CC2573SCDJ5015', ano:'2024', exercicio:'2025', cor:'Preta', antt:'058537322', anttNome:'Renan Paulo Ribeiro da Silva', anttDoc:'086.782.429-81', proprietario:'Renan Paulo Ribeiro da Silva', proprietarioDoc:'086.782.429-81', motoristaAtualId:'seed-renan-paulo'},
+    {id:'seed-bya5f16', tipo:'cavalo', placa:'BYA5F16', marcaModelo:'SCANIA/R113 H 4X2 360', renavam:'00617796386', chassi:'9BSRH4X2ZR3356518', ano:'1994', exercicio:'2025', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'Joao Carlos Vilas Boas Barbosa', proprietarioDoc:'080.236.078-55', motoristaAtualId:'seed-renan-fogaca'},
+    {id:'seed-bsf4i05', tipo:'semireboque', placa:'BSF4I05', marcaModelo:'SR/IDEROL', renavam:'00639693490', chassi:'9ABP12630S1141255', ano:'1995', exercicio:'2025', cor:'Azul', antt:'012844663', anttNome:'Arthur Gomes de Queiroz', anttDoc:'225.633.068-09', proprietario:'Arthur Gomes de Queiroz', proprietarioDoc:'225.633.068-09', motoristaAtualId:'seed-renan-fogaca'},
+    {id:'seed-fei2j90', tipo:'cavalo', placa:'FEI2J90', marcaModelo:'M.BENZ/ATRON 1635 S', renavam:'00483739782', chassi:'9BM695053CB866718', ano:'2012', exercicio:'2025', cor:'Prata', antt:'', anttNome:'', anttDoc:'', proprietario:'Marcelo Rodrigues da Silva', proprietarioDoc:'097.832.338-66', motoristaAtualId:'seed-renato-santos'},
+    {id:'seed-dpf3513', tipo:'semireboque', placa:'DPF3513', marcaModelo:'SR/RODOTEC PC 4020', renavam:'00971889406', chassi:'9A9SR3E138SDU8070', ano:'2008', exercicio:'2025', cor:'Preta', antt:'', anttNome:'', anttDoc:'', proprietario:'Marcelo Rodrigues da Silva', proprietarioDoc:'097.832.338-66', motoristaAtualId:'seed-renato-santos'},
+    {id:'seed-emg8a05', tipo:'cavalo', placa:'EMG8A05', marcaModelo:'VW/25.370 CLM T 6X2', renavam:'00231659628', chassi:'9535W8277AR039318', ano:'2010', exercicio:'2025', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'Bona Log Transportes LTDA', proprietarioDoc:'21.191.491/0001-75', motoristaAtualId:'seed-robert-lossurdo'},
+    {id:'seed-jom5j43', tipo:'semireboque', placa:'JOM5J43', marcaModelo:'SR/FACCHINI SRF TG', renavam:'00789174880', chassi:'94BE085222V000407', ano:'2002', exercicio:'2025', cor:'Amarela', antt:'', anttNome:'', anttDoc:'', proprietario:'Bona Log Transportes LTDA', proprietarioDoc:'21.191.491/0001-75', motoristaAtualId:'seed-robert-lossurdo'},
+    {id:'seed-lqr0h32', tipo:'cavalo', placa:'LQR0H32', marcaModelo:'M.BENZ/LS 1634', renavam:'00840070454', chassi:'9BM6950524B400501', ano:'2004', exercicio:'2025', cor:'Branca', antt:'058493222', anttNome:'Roberto Matias Junior', anttDoc:'313.177.308-10', proprietario:'Roberto Matias Junior', proprietarioDoc:'313.177.308-10', motoristaAtualId:'seed-roberto-matias-jr'},
+    {id:'seed-bmf8b96', tipo:'semireboque', placa:'BMF8B96', marcaModelo:'REB/ANTONINI', renavam:'00607198702', chassi:'9ANE13120NM000750', ano:'1992', exercicio:'2025', cor:'Vermelha', antt:'', anttNome:'', anttDoc:'', proprietario:'Felipe Tiago de Mello Fonseca', proprietarioDoc:'275.294.768-23', motoristaAtualId:'seed-roberto-matias-jr'},
+    {id:'seed-pna1j49', tipo:'cavalo', placa:'PNA1J49', marcaModelo:'MAN/TGX 29.480 6X4 T', renavam:'01066681845', chassi:'9532AXAZ4GE500554', ano:'2015', exercicio:'2025', cor:'Branca', antt:'057296611', anttNome:'Joao Victor da Silveira Rocha', anttDoc:'416.042.158-01', proprietario:'Joao Batista da Silva Rocha', proprietarioDoc:'062.978.818-98', motoristaAtualId:'seed-rogerio-mesquita'},
+    {id:'seed-avr6h03', tipo:'semireboque', placa:'AVR6H03', marcaModelo:'SR/LIBRELATO SRCS 3E', renavam:'00272704628', chassi:'9A9CS4273BLDJ5297', ano:'2010', exercicio:'2025', cor:'Vermelha', antt:'057296611', anttNome:'Joao Victor da Silveira Rocha', anttDoc:'416.042.158-01', proprietario:'Guilherme da Silveira Rocha', proprietarioDoc:'416.042.168-75', motoristaAtualId:'seed-rogerio-mesquita'},
+    {id:'seed-lqm8h00', tipo:'cavalo', placa:'LQM8H00', marcaModelo:'VW/25.390 CTC 6X2', renavam:'00493609431', chassi:'9536T8279CR260192', ano:'2012', exercicio:'2023', cor:'Branca', antt:'', anttNome:'', anttDoc:'', proprietario:'Lais Hungria Andrade', proprietarioDoc:'448.975.258-02', motoristaAtualId:'seed-ronaldo-hungria'},
+    {id:'seed-aen2e21', tipo:'semireboque', placa:'AEN2E21', marcaModelo:'SR/RANDON', renavam:'00530006910', chassi:'58935', ano:'1983', exercicio:'2024', cor:'Cinza', antt:'', anttNome:'', anttDoc:'', proprietario:'Lais Hungria Andrade', proprietarioDoc:'448.975.258-02', motoristaAtualId:'seed-ronaldo-hungria'},
+    {id:'seed-dpf3898', tipo:'cavalo', placa:'DPF3898', marcaModelo:'IVECO/STRALISHD 570S42TN', renavam:'00181331381', chassi:'93ZS2MSH098804666', ano:'2008', exercicio:'2025', cor:'Vermelha', antt:'', anttNome:'', anttDoc:'', proprietario:'Lucas Luna de Jesus Gertrudes', proprietarioDoc:'504.551.308-76', motoristaAtualId:'seed-vinicius-luna'},
+    {id:'seed-mis9c93', tipo:'cavalo', placa:'MIS9C93', marcaModelo:'SCANIA/P 340 A6X2', renavam:'00329587633', chassi:'9BSP6X200B3686128', ano:'2011', exercicio:'2025', cor:'Branca', antt:'058836522', anttNome:'Luis Felipe Ledoux Batista Reis', anttDoc:'096.250.169-70', proprietario:'Ademir Reis', proprietarioDoc:'018.510.239-50', motoristaAtualId:'seed-willian-neumann'},
+    {id:'seed-qhb9b74', tipo:'semireboque', placa:'QHB9B74', marcaModelo:'SR/FACCHINI SRF PC', renavam:'01007758497', chassi:'94BJ1243EEV044784', ano:'2014', exercicio:'2025', cor:'Cinza', antt:'058836522', anttNome:'Luis Felipe Ledoux Batista Reis', anttDoc:'096.250.169-70', proprietario:'Ademir Reis', proprietarioDoc:'018.510.239-50', motoristaAtualId:'seed-willian-neumann'}
+  ];
+  let okCount = 0, failCount = 0;
+  for(const m of seedMotoristas){
+    try{
+      const exists = await window.storage.get(M_PREFIX + m.id, true).catch(()=>null);
+      if(!exists){ await saveMotorista(m); }
+      okCount++;
+    }catch(e){ failCount++; console.error('Falha ao salvar motorista', m.id, e); }
+  }
+  for(const v of seedVeiculos){
+    try{
+      const existing = await window.storage.get(V_PREFIX + v.id, true).catch(()=>null);
+      if(!existing){
+        await saveVeiculo(v);
+      } else {
+        const current = JSON.parse(existing.value);
+        if(!current.exercicio && v.exercicio){
+          current.exercicio = v.exercicio;
+          await saveVeiculo(current);
+        }
+      }
+      okCount++;
+    }catch(e){ failCount++; console.error('Falha ao salvar veículo', v.id, e); }
+  }
+  if(failCount > 0) console.warn(`Seed concluído com falhas: ${okCount} ok, ${failCount} falharam.`);
+}
+
+
+async function waitForStorage(maxWaitMs){
+  const start=Date.now();
+  while(!window.storage&&(Date.now()-start)<maxWaitMs) await new Promise(r=>setTimeout(r,100));
+  return !!window.storage;
+}
+
+async function boot(){
+  const ready=await waitForStorage(4000);
+  if(!ready){
+    lastLoadError='window.storage nao ficou disponivel a tempo.';
+    motoristas=[]; veiculos=[]; render(); return;
+  }
+  // Check security before loading data
+  const hash=await getStoredHash();
+  if(!hash){ isSetup=true; isLocked=false; renderSetupScreen(); }
+  else { isLocked=true; renderLockScreen(); }
+  // Load data in background
+  try{ await seedIfNeeded(); }catch(e){ console.error('seedIfNeeded falhou:',e); }
+  await loadAll();
+}
+
+boot();
 </script>
-
 </body>
 </html>
