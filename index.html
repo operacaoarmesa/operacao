@@ -686,6 +686,8 @@ const OP_STAGES = [
 const OP_STATE_KEY  = 'op:state';
 const OP_HIST_PFX   = 'op:hist:';
 
+const OP_HISTORY_DAYS = 10; // Expiração do histórico de operações
+
 let opState = { driverName:'',plateCavalo:'',plateReboque:'',containerNum:'',refNum:'',operMsg:'',destEmail:'',stages:{},openStage:null };
 let opClockTimer = null;
 
@@ -739,13 +741,36 @@ async function opSaveToHistory(){
       }
     }
     await window.storage.set(OP_HIST_PFX+entry.id,JSON.stringify(entry),false);
-    // Keep max 50
+    // Keep max 200
     const updated=await opLoadHistory();
-    if(updated.length>50){
-      for(const old of updated.slice(50)){
+    if(updated.length>200){
+      for(const old of updated.slice(200)){
         try{ await window.storage.delete(OP_HIST_PFX+old.id,false); }catch(e){}
       }
     }
+  }catch(e){}
+}
+
+// ── Limpeza automática por expiração ─────────────────────────────────────────
+async function opCleanExpiredHistory(){
+  try{
+    const keys=(await window.storage.list(OP_HIST_PFX,false))?.keys||[];
+    const cutoff=Date.now()-(OP_HISTORY_DAYS*24*60*60*1000);
+    let removed=0;
+    for(const k of keys){
+      try{
+        const r=await window.storage.get(k,false);
+        if(r&&r.value){
+          const entry=JSON.parse(r.value);
+          const savedAt=entry.savedAt?new Date(entry.savedAt).getTime():0;
+          if(savedAt<cutoff){
+            await window.storage.delete(k,false);
+            removed++;
+          }
+        }
+      }catch(e){}
+    }
+    if(removed>0) console.log(`Operação: ${removed} entrada(s) expirada(s) removida(s)`);
   }catch(e){}
 }
 
@@ -985,6 +1010,7 @@ async function renderOperacaoTab(){
   const body=document.getElementById('tab-body');
   body.innerHTML='<div class="loading">Carregando operação…</div>';
   await opLoadState();
+  await opCleanExpiredHistory(); // Remove entradas com mais de 30 dias
 
   body.innerHTML=`
     <div class="op-module">
@@ -1000,6 +1026,7 @@ async function renderOperacaoTab(){
 
       <div class="op-card">
         <p class="op-card-title">Buscar operação anterior</p>
+        <div class="op-hint" style="margin-bottom:.6rem;">Histórico mantido por <b>${OP_HISTORY_DAYS} dias</b>. Operações mais antigas são removidas automaticamente.</div>
         <div class="op-search-row">
           <input type="text" id="op-searchQuery" placeholder="Nº do contêiner ou referência…" autocomplete="off">
           <button type="button" id="op-searchBtn">Buscar</button>
